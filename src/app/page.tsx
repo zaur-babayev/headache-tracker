@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@clerk/nextjs';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 type HeadacheEntry = {
   id: string;
@@ -21,6 +22,7 @@ type HeadacheEntry = {
 
 export default function Home() {
   const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
   const [headacheEntries, setHeadacheEntries] = useState<HeadacheEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,13 +49,15 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (isAuthLoaded && !isSignedIn) {
+      router.push('/sign-in');
+    } else if (isSignedIn) {
       fetchHeadacheEntries();
     }
-  }, [isSignedIn]);
+  }, [isAuthLoaded, isSignedIn, router]);
 
   // Show loading state while auth is loading
-  if (!isAuthLoaded) {
+  if (!isAuthLoaded || (isAuthLoaded && !isSignedIn)) {
     return (
       <PageContainer>
         <div className="flex items-center justify-center h-[50vh]">

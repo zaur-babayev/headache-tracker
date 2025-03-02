@@ -22,7 +22,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider 
+      appearance={{
+        elements: {
+          formButtonPrimary: 'bg-primary hover:bg-primary/90',
+          footerActionLink: 'text-primary hover:text-primary/90',
+        }
+      }}
+    >
       <html lang="en" suppressHydrationWarning className={inter.variable}>
         <body className={`font-sans antialiased bg-background text-foreground ${inter.className}`}>
           <ThemeProvider

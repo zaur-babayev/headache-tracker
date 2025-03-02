@@ -1,9 +1,9 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
  
 export default clerkMiddleware({
-  // Allow signed out users to access the public home page
-  publicRoutes: ["/"],
-  // Add routes that can be accessed without authentication
+  // Routes that can be accessed while signed out
+  publicRoutes: ["/sign-in", "/sign-up", "/api/public"],
+  // Routes that can always be accessed, and have no authentication information
   ignoredRoutes: ["/api/public"]
 });
  

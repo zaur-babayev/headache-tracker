@@ -1,62 +1,94 @@
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
-type Medication = {
-  id?: string;
-  name: string;
-  dosage?: string;
-};
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { CalendarIcon, Plus, X } from 'lucide-react';
 
 type HeadacheFormProps = {
   onSuccess?: () => void;
-  initialData?: {
+  onCancel?: () => void;
+  initialValues?: {
     id?: string;
-    date: Date;
+    date: string | Date;
     severity: number;
     notes?: string;
     triggers?: string;
-    medications: Medication[];
+    medications?: { id: string; name: string; dosage?: string }[];
+  };
+  existingEntry?: {
+    id: string;
+    date: string;
+    severity: number;
+    notes?: string;
+    triggers?: string;
+    medications: { id: string; name: string; dosage?: string }[];
+    createdAt: string;
+    updatedAt: string;
   };
   mode?: 'create' | 'edit';
+  isDialog?: boolean;
 };
 
-export function HeadacheForm({ onSuccess, initialData, mode = 'create' }: HeadacheFormProps) {
-  const [date, setDate] = useState<Date | undefined>(initialData?.date || new Date());
-  const [severity, setSeverity] = useState<number>(initialData?.severity || 3);
-  const [notes, setNotes] = useState<string>(initialData?.notes || '');
-  const [triggers, setTriggers] = useState<string>(initialData?.triggers || '');
-  const [medications, setMedications] = useState<Medication[]>(initialData?.medications || []);
-  const [newMedName, setNewMedName] = useState<string>('');
-  const [newMedDosage, setNewMedDosage] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+// Separate the form content from the dialog wrapper
+function HeadacheFormContent({ 
+  onSuccess, 
+  onCancel, 
+  initialValues, 
+  existingEntry,
+  mode = 'create',
+  isDialog = true
+}: HeadacheFormProps) {
+  // Combine initialValues and existingEntry to support both formats
+  const entryData = existingEntry || initialValues;
+  
+  const initialDate = entryData?.date 
+    ? typeof entryData.date === 'string' 
+      ? new Date(entryData.date) 
+      : entryData.date 
+    : new Date();
+  
+  const [date, setDate] = useState<Date | undefined>(initialDate);
+  const [severity, setSeverity] = useState<number>(entryData?.severity || 3);
+  const [notes, setNotes] = useState<string>(entryData?.notes || '');
+  const [triggers, setTriggers] = useState<string>(entryData?.triggers || '');
+  const [medications, setMedications] = useState<{ id: string; name: string; dosage?: string }[]>(
+    entryData?.medications || []
+  );
+  const [newMedication, setNewMedication] = useState<string>('');
+  const [newDosage, setNewDosage] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleAddMedication = () => {
-    if (!newMedName.trim()) return;
-    
-    setMedications([
-      ...medications,
-      { name: newMedName, dosage: newMedDosage || undefined }
-    ]);
-    
-    setNewMedName('');
-    setNewMedDosage('');
+    if (newMedication.trim()) {
+      setMedications([
+        ...medications,
+        {
+          id: Date.now().toString(),
+          name: newMedication.trim(),
+          dosage: newDosage.trim() || undefined,
+        },
+      ]);
+      setNewMedication('');
+      setNewDosage('');
+    }
   };
 
-  const handleRemoveMedication = (index: number) => {
-    const updatedMeds = [...medications];
-    updatedMeds.splice(index, 1);
-    setMedications(updatedMeds);
+  const handleRemoveMedication = (id: string) => {
+    setMedications(medications.filter((med) => med.id !== id));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!date) {
@@ -64,13 +96,19 @@ export function HeadacheForm({ onSuccess, initialData, mode = 'create' }: Headac
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      const endpoint = mode === 'create' 
-        ? '/api/headaches' 
-        : `/api/headaches/${initialData?.id}`;
+      setIsSubmitting(true);
       
+      const headacheData = {
+        id: entryData?.id,
+        date: date.toISOString(),
+        severity,
+        notes: notes || undefined,
+        triggers: triggers || undefined,
+        medications,
+      };
+      
+      const endpoint = mode === 'create' ? '/api/headaches' : `/api/headaches/${entryData?.id}`;
       const method = mode === 'create' ? 'POST' : 'PUT';
       
       const response = await fetch(endpoint, {
@@ -78,39 +116,22 @@ export function HeadacheForm({ onSuccess, initialData, mode = 'create' }: Headac
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          date,
-          severity,
-          notes,
-          triggers,
-          medications,
-        }),
+        body: JSON.stringify(headacheData),
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to save headache entry');
       }
-
+      
       toast.success(
         mode === 'create' 
-          ? 'Headache entry created successfully' 
+          ? 'Headache entry added successfully' 
           : 'Headache entry updated successfully'
       );
       
       if (onSuccess) {
         onSuccess();
       }
-      
-      if (mode === 'create') {
-        // Reset form for create mode
-        setDate(new Date());
-        setSeverity(3);
-        setNotes('');
-        setTriggers('');
-        setMedications([]);
-      }
-      
-      setIsOpen(false);
     } catch (error) {
       console.error('Error saving headache entry:', error);
       toast.error('Failed to save headache entry');
@@ -119,24 +140,31 @@ export function HeadacheForm({ onSuccess, initialData, mode = 'create' }: Headac
     }
   };
 
-  const formContent = (
-    <form onSubmit={handleSubmit} className="space-y-4">
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="date">Date</Label>
-        <Popover>
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="w-full justify-start text-left font-normal"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
             >
-              {date ? format(date, 'PPP') : <span>Pick a date</span>}
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, "PPP") : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
+          <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
               selected={date}
-              onSelect={setDate}
+              onSelect={(newDate) => {
+                setDate(newDate);
+                setIsCalendarOpen(false);
+              }}
               initialFocus
             />
           </PopoverContent>
@@ -144,14 +172,17 @@ export function HeadacheForm({ onSuccess, initialData, mode = 'create' }: Headac
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="severity">Severity (1-5)</Label>
-        <div className="flex items-center space-x-2">
+        <Label>Severity (1-5)</Label>
+        <div className="flex space-x-2">
           {[1, 2, 3, 4, 5].map((level) => (
             <Button
               key={level}
               type="button"
               variant={severity === level ? "default" : "outline"}
-              className="flex-1"
+              className={cn(
+                "flex-1",
+                severity === level && "font-semibold"
+              )}
               onClick={() => setSeverity(level)}
             >
               {level}
@@ -166,55 +197,68 @@ export function HeadacheForm({ onSuccess, initialData, mode = 'create' }: Headac
           id="triggers"
           value={triggers}
           onChange={(e) => setTriggers(e.target.value)}
-          placeholder="What might have triggered this headache?"
+          placeholder="E.g., stress, lack of sleep, food"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes (Optional)</Label>
-        <Input
+        <Textarea
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Any additional notes"
+          placeholder="Additional details about this headache episode"
+          rows={3}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Medications</Label>
+        <Label>Medications (Optional)</Label>
         <div className="flex space-x-2">
           <Input
-            value={newMedName}
-            onChange={(e) => setNewMedName(e.target.value)}
+            value={newMedication}
+            onChange={(e) => setNewMedication(e.target.value)}
             placeholder="Medication name"
             className="flex-1"
           />
           <Input
-            value={newMedDosage}
-            onChange={(e) => setNewMedDosage(e.target.value)}
+            value={newDosage}
+            onChange={(e) => setNewDosage(e.target.value)}
             placeholder="Dosage (optional)"
             className="flex-1"
           />
-          <Button type="button" onClick={handleAddMedication}>
-            Add
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="icon"
+            onClick={handleAddMedication}
+          >
+            <Plus className="h-4 w-4" />
           </Button>
         </div>
-        
+
         {medications.length > 0 && (
           <div className="mt-2 space-y-2">
-            {medications.map((med, index) => (
-              <div key={index} className="flex items-center justify-between rounded border p-2">
+            {medications.map((med) => (
+              <div 
+                key={med.id} 
+                className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+              >
                 <div>
                   <span className="font-medium">{med.name}</span>
-                  {med.dosage && <span className="ml-2 text-sm text-gray-500">{med.dosage}</span>}
+                  {med.dosage && (
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      {med.dosage}
+                    </span>
+                  )}
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveMedication(index)}
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => handleRemoveMedication(med.id)}
                 >
-                  Remove
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
@@ -222,27 +266,72 @@ export function HeadacheForm({ onSuccess, initialData, mode = 'create' }: Headac
         )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Saving...' : mode === 'create' ? 'Add Headache Entry' : 'Update Headache Entry'}
-      </Button>
+      <div className="flex gap-2 justify-end">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+        <Button type="submit" className={onCancel ? '' : 'w-full'} disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : mode === 'create' ? 'Add Entry' : 'Update Entry'}
+        </Button>
+      </div>
     </form>
   );
+}
 
-  if (mode === 'create') {
+export function HeadacheForm({ 
+  onSuccess, 
+  onCancel, 
+  initialValues, 
+  existingEntry,
+  mode = 'create',
+  isDialog = true
+}: HeadacheFormProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // For direct embedding (like in the mobile bottom nav or calendar view)
+  if (!isDialog) {
     return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button>Add Headache Entry</Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add New Headache Entry</DialogTitle>
-          </DialogHeader>
-          {formContent}
-        </DialogContent>
-      </Dialog>
+      <HeadacheFormContent
+        onSuccess={onSuccess}
+        onCancel={onCancel}
+        initialValues={initialValues}
+        existingEntry={existingEntry}
+        mode={existingEntry || (initialValues?.id) ? 'edit' : 'create'}
+        isDialog={false}
+      />
     );
   }
 
-  return formContent;
+  // For dialog trigger button
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="default">Add Entry</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {mode === 'create' ? 'Add Headache Entry' : 'Edit Headache Entry'}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === 'create' 
+              ? 'Record a new headache episode. Click save when you\'re done.'
+              : 'Update this headache entry. Click save when you\'re done.'}
+          </DialogDescription>
+        </DialogHeader>
+        <HeadacheFormContent 
+          onSuccess={() => {
+            setIsOpen(false);
+            if (onSuccess) onSuccess();
+          }} 
+          initialValues={initialValues}
+          existingEntry={existingEntry}
+          mode={mode}
+          isDialog={true}
+        />
+      </DialogContent>
+    </Dialog>
+  );
 }

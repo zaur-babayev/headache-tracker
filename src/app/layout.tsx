@@ -1,21 +1,17 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { Toaster } from 'sonner';
+import { ThemeProvider } from '@/components/theme-provider';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
-  title: "Headache Tracker",
-  description: "Track your headaches and medications",
+  title: 'Headache Tracker',
+  description: 'Track and analyze your headache patterns',
 };
 
 export default function RootLayout({
@@ -24,12 +20,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-        <Toaster />
+    <html lang="en" suppressHydrationWarning className={inter.variable}>
+      <body className={`font-sans antialiased min-h-screen bg-background text-foreground ${inter.className}`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster 
+            position="top-right" 
+            richColors 
+            closeButton 
+            toastOptions={{
+              style: {
+                fontSize: '0.875rem',
+                borderRadius: '0.5rem',
+                padding: '1rem',
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );

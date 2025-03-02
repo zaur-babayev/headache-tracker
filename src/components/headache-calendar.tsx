@@ -113,7 +113,7 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
           <Button 
             variant="outline" 
             size="icon"
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            onClick={() => setCurrentMonth(subMonths(currentMonth, { months: 1 }))}
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="sr-only">Previous month</span>
@@ -122,7 +122,7 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
           <Button 
             variant="outline" 
             size="icon"
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            onClick={() => setCurrentMonth(addMonths(currentMonth, { months: 1 }))}
           >
             <ChevronRight className="h-4 w-4" />
             <span className="sr-only">Next month</span>

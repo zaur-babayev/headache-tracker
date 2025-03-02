@@ -20,7 +20,7 @@ export async function GET() {
     
     // Get data for the last 6 months
     for (let i = 0; i < 6; i++) {
-      const targetMonth = subMonths(now, i);
+      const targetMonth = subMonths(now, { months: i });
       const start = startOfMonth(targetMonth);
       const end = endOfMonth(targetMonth);
       

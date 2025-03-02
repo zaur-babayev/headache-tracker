@@ -31,14 +31,30 @@ export default function RootLayout({
         >
           {children}
           <Toaster 
-            position="top-right" 
-            richColors 
-            closeButton 
+            position="top-right"
+            theme="dark"
+            closeButton
             toastOptions={{
               style: {
-                fontSize: '0.875rem',
-                borderRadius: '0.5rem',
-                padding: '1rem',
+                background: 'hsl(240 10% 3.9%)',
+                color: 'hsl(0 0% 98%)',
+                border: '1px solid hsl(240 3.7% 15.9%)',
+              },
+              success: {
+                style: {
+                  background: 'hsl(240 10% 3.9%)',
+                  color: 'hsl(0 0% 98%)',
+                  border: '1px solid hsl(240 3.7% 15.9%)',
+                },
+                icon: '✓',
+              },
+              error: {
+                style: {
+                  background: 'hsl(240 10% 3.9%)',
+                  color: 'hsl(0 0% 98%)',
+                  border: '1px solid hsl(0 62.8% 30.6%)',
+                },
+                icon: '✕',
               },
             }}
           />

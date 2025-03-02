@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       data: {
         date: new Date(date),
         severity: Number(severity),
-        notes,
+        notes: notes || null,
         triggers: JSON.stringify(triggers || []),
         medications: JSON.stringify(medications || []),
       },
@@ -86,7 +86,7 @@ export async function PUT(request: NextRequest) {
       data: {
         date: new Date(date),
         severity: Number(severity),
-        notes,
+        notes: notes || null,
         triggers: JSON.stringify(triggers || []),
         medications: JSON.stringify(medications || []),
       },

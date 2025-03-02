@@ -114,146 +114,164 @@ export function StatisticsDashboard() {
   };
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle>Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-            <div className="flex flex-col items-center justify-center p-4 bg-primary/10 rounded-lg">
-              <h3 className="text-xl font-semibold">Total Headaches</h3>
-              <p className="text-3xl font-bold mt-2">{statistics.totalHeadaches}</p>
-            </div>
-            
-            <div className="flex flex-col items-center justify-center p-4 bg-primary/10 rounded-lg">
-              <h3 className="text-xl font-semibold">Most Common Severity</h3>
-              <p className="text-3xl font-bold mt-2">
-                {statistics.severityDistribution.indexOf(Math.max(...statistics.severityDistribution)) + 1}
-              </p>
-            </div>
-            
-            <div className="flex flex-col items-center justify-center p-4 bg-primary/10 rounded-lg">
-              <h3 className="text-xl font-semibold">Top Medication</h3>
-              <p className="text-3xl font-bold mt-2">
-                {statistics.medicationStats.length > 0 
-                  ? statistics.medicationStats[0].name 
-                  : 'None'}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      <div className="grid grid-cols-3 gap-3">
+        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
+          <p className="text-xs font-medium text-muted-foreground">Total Headaches</p>
+          <p className="mt-1 text-xl font-semibold">{statistics.totalHeadaches}</p>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
+          <p className="text-xs font-medium text-muted-foreground">Common Severity</p>
+          <p className="mt-1 text-xl font-semibold">
+            {statistics.severityDistribution.indexOf(Math.max(...statistics.severityDistribution)) + 1}
+          </p>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
+          <p className="text-xs font-medium text-muted-foreground">Top Medication</p>
+          <p className="mt-1 text-xl font-semibold truncate max-w-[120px]">
+            {statistics.medicationStats.length > 0 
+              ? statistics.medicationStats[0].name 
+              : 'None'}
+          </p>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Monthly Headache Frequency</CardTitle>
-          <CardDescription>Number of headaches per month</CardDescription>
-        </CardHeader>
-        <CardContent className="h-[300px] sm:h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={statistics.monthlyFrequency}
-              margin={{ top: 10, right: 10, left: 0, bottom: 40 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-              <XAxis 
-                dataKey="month" 
-                angle={-45} 
-                textAnchor="end" 
-                height={60} 
-                tick={{ fill: chartColors.text, fontSize: 12 }}
-              />
-              <YAxis tick={{ fill: chartColors.text }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" fill={chartColors.headacheCount} name="Headache Count" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Average Severity by Month</CardTitle>
-          <CardDescription>Average headache severity (1-5 scale)</CardDescription>
-        </CardHeader>
-        <CardContent className="h-[300px] sm:h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={statistics.monthlyFrequency}
-              margin={{ top: 10, right: 10, left: 0, bottom: 40 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-              <XAxis 
-                dataKey="month" 
-                angle={-45} 
-                textAnchor="end" 
-                height={60} 
-                tick={{ fill: chartColors.text, fontSize: 12 }}
-              />
-              <YAxis domain={[0, 5]} tick={{ fill: chartColors.text }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="averageSeverity" fill={chartColors.severity} name="Average Severity" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Severity Distribution</CardTitle>
-          <CardDescription>Distribution of headache severity levels</CardDescription>
-        </CardHeader>
-        <CardContent className="h-[300px] sm:h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={severityPieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <div className="rounded-lg bg-card py-4 text-card-foreground shadow-sm">
+          <h3 className="text-base font-medium mb-3">Monthly Headache Frequency</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={statistics.monthlyFrequency}
+                margin={{ top: 20, right: 15, left: -15, bottom: 50 }}
+                barSize={30}
+                maxBarSize={40}
               >
-                {severityPieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={SEVERITY_COLORS[index % SEVERITY_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend formatter={(value) => <span style={{ color: chartColors.text }}>{value}</span>} />
-            </PieChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} vertical={false} />
+                <XAxis 
+                  dataKey="month" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={60} 
+                  tick={{ fill: chartColors.text, fontSize: 12 }}
+                  interval={0}
+                  tickMargin={5}
+                  axisLine={{ stroke: chartColors.grid }}
+                />
+                <YAxis 
+                  tick={{ fill: chartColors.text }} 
+                  allowDecimals={false}
+                  domain={[0, 'auto']}
+                  width={20}
+                  axisLine={false}
+                  tickLine={false}
+                  dx={-5}
+                />
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
+                />
+                <Bar 
+                  dataKey="count" 
+                  fill={chartColors.headacheCount} 
+                  name="Headache Count"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Medication Usage</CardTitle>
-          <CardDescription>Most commonly used medications</CardDescription>
-        </CardHeader>
-        <CardContent className="h-[300px] sm:h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={statistics.medicationStats}
-              layout="vertical"
-              margin={{ top: 10, right: 10, left: 50, bottom: 10 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-              <XAxis type="number" tick={{ fill: chartColors.text }} />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                width={100} 
-                tick={{ fill: chartColors.text, fontSize: 12 }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" fill={chartColors.medication} name="Usage Count" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+        <div className="rounded-lg bg-card py-4 text-card-foreground shadow-sm">
+          <h3 className="text-base font-medium mb-3">Average Severity by Month</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={statistics.monthlyFrequency}
+                margin={{ top: 20, right: 15, left: -15, bottom: 50 }}
+                barSize={30}
+                maxBarSize={40}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} vertical={false} />
+                <XAxis 
+                  dataKey="month" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={60} 
+                  tick={{ fill: chartColors.text, fontSize: 12 }}
+                  interval={0}
+                  tickMargin={5}
+                  axisLine={{ stroke: chartColors.grid }}
+                />
+                <YAxis 
+                  domain={[0, 5]} 
+                  tick={{ fill: chartColors.text }}
+                  ticks={[0, 1, 2, 3, 4, 5]}
+                  width={20}
+                  axisLine={false}
+                  tickLine={false}
+                  dx={-5}
+                />
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
+                />
+                <Bar 
+                  dataKey="averageSeverity" 
+                  fill={chartColors.severity} 
+                  name="Average Severity"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="rounded-lg bg-card py-4 text-card-foreground shadow-sm lg:col-span-2">
+          <h3 className="text-base font-medium mb-3">Severity Distribution</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <Pie
+                  data={severityPieData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  label={({ name, value, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  labelLine={{ stroke: chartColors.text, strokeWidth: 1 }}
+                >
+                  {severityPieData.map((_, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={SEVERITY_COLORS[index]} 
+                      strokeWidth={1}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  formatter={(value) => [`${value} occurrences`, 'Count']}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value) => (
+                    <span style={{ color: isDarkMode ? '#e5e7eb' : '#374151' }}>
+                      {value}
+                    </span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

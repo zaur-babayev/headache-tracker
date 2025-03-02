@@ -7,6 +7,7 @@ import { HeadacheCalendar } from '@/components/headache-calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { PageContainer } from '@/components/page-container';
 
 type Medication = {
   id: string;
@@ -55,17 +56,16 @@ export default function StatisticsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Nav />
-      
-      <main className="flex-1 container py-16 px-4 sm:px-6 max-w-6xl mx-auto">
-        <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Statistics</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Analyze your headache patterns and trends
+    <PageContainer>
+      <div className="space-y-8">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Statistics
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Analyze your headache patterns
           </p>
         </div>
-        
         <Tabs defaultValue="charts" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="charts" className="text-sm">Analytics</TabsTrigger>
@@ -112,7 +112,7 @@ export default function StatisticsPage() {
             </div>
           </TabsContent>
         </Tabs>
-      </main>
-    </div>
+      </div>
+    </PageContainer>
   );
 }

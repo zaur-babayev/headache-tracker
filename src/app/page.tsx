@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Nav } from '@/components/nav';
 import { HeadacheList } from '@/components/headache-list';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageContainer } from '@/components/page-container';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Medication = {
   id: string;
@@ -31,6 +32,7 @@ export default function Home() {
   const fetchHeadacheEntries = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const response = await fetch('/api/headaches');
       
       if (!response.ok) {
@@ -53,74 +55,51 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Nav />
-      
-      <main className="flex-1 container py-16 px-4 sm:px-6 max-w-6xl mx-auto">
-        <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Track and manage your headache entries
+    <PageContainer>
+      <div className="space-y-8">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Headache Entries
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Track and manage your headaches
           </p>
         </div>
-        
-        <Tabs defaultValue="recent" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="recent" className="text-sm">Recent Entries</TabsTrigger>
-            <TabsTrigger value="all" className="text-sm">All Entries</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="recent" className="space-y-4">
-            <div className="rounded-lg bg-card py-4 text-card-foreground shadow-sm">
-              
-              {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                  <p className="mt-2 text-sm text-muted-foreground">Loading headache entries...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-8">
-                  <p className="text-red-500 text-sm">{error}</p>
-                </div>
-              ) : headacheEntries.length === 0 ? (
-                <div className="text-center py-8 border border-dashed rounded-lg">
-                  <p className="text-muted-foreground text-sm">No headache entries yet. Use the "Add Entry" button to record your first headache.</p>
-                </div>
-              ) : (
-                <HeadacheList 
-                  entries={headacheEntries.slice(0, 5)} 
-                  onEntryUpdated={fetchHeadacheEntries} 
-                />
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="all" className="space-y-4">
-            <div className="rounded-lg bg-card py-4 text-card-foreground shadow-sm">
-              
-              {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                  <p className="mt-2 text-sm text-muted-foreground">Loading headache entries...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-8">
-                  <p className="text-red-500 text-sm">{error}</p>
-                </div>
-              ) : headacheEntries.length === 0 ? (
-                <div className="text-center py-8 border border-dashed rounded-lg">
-                  <p className="text-muted-foreground text-sm">No headache entries yet. Use the "Add Entry" button to record your first headache.</p>
-                </div>
-              ) : (
-                <HeadacheList 
-                  entries={headacheEntries} 
-                  onEntryUpdated={fetchHeadacheEntries} 
-                />
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+            <p className="mt-2 text-sm text-muted-foreground">Loading headache entries...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-red-500 text-sm">{error}</p>
+          </div>
+        ) : headacheEntries.length === 0 ? (
+          <div className="text-center py-8 border border-dashed rounded-lg">
+            <p className="text-muted-foreground text-sm">No headache entries yet. Use the "Add Entry" button to record your first headache.</p>
+          </div>
+        ) : (
+          <Tabs defaultValue="recent" className="w-full">
+            <TabsList className="w-full grid grid-cols-2">
+              <TabsTrigger value="recent">Recent Entries</TabsTrigger>
+              <TabsTrigger value="all">All Entries</TabsTrigger>
+            </TabsList>
+            <TabsContent value="recent" className="mt-6">
+              <HeadacheList 
+                entries={headacheEntries.slice(0, 5)} 
+                onEntryUpdated={fetchHeadacheEntries} 
+              />
+            </TabsContent>
+            <TabsContent value="all" className="mt-6">
+              <HeadacheList 
+                entries={headacheEntries} 
+                onEntryUpdated={fetchHeadacheEntries} 
+              />
+            </TabsContent>
+          </Tabs>
+        )}
+      </div>
+    </PageContainer>
   );
 }

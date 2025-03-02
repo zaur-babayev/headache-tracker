@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, BarChart3, Home, Plus, Menu, X } from 'lucide-react';
+import { BarChart3, Home, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -10,7 +10,6 @@ import { HeadacheForm } from '@/components/headache-form';
 
 export function Nav() {
   const pathname = usePathname();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const routes = [
@@ -31,13 +30,10 @@ export function Nav() {
   return (
     <>
       {/* Top header for desktop */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm md:flex hidden">
-        <div className="container flex h-16 items-center px-4 sm:px-6">
-          <div className="mr-4 flex">
-            <Link href="/" className="mr-8 flex items-center space-x-2">
-              <span className="font-bold text-lg tracking-tight">Headache Tracker</span>
-            </Link>
-            <nav className="flex items-center space-x-8 text-sm font-medium">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:flex hidden">
+        <div className="container h-16 px-4 mx-auto md:max-w-2xl lg:max-w-2xl xl:max-w-2xl">
+          <div className="flex h-full items-center justify-between">
+            <nav className="flex items-center space-x-6">
               {routes.map((route) => (
                 <Link
                   key={route.href}
@@ -51,16 +47,13 @@ export function Nav() {
                 >
                   <route.icon className="h-4 w-4" />
                   <span>{route.label}</span>
-                  {route.active && (
-                    <span className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-primary/40 via-primary to-primary/40" />
-                  )}
                 </Link>
               ))}
             </nav>
-          </div>
 
-          <div className="flex flex-1 items-center justify-end space-x-4">
-            <HeadacheForm onSuccess={() => {}} isDialog={true} mode="create" />
+            <div className="flex items-center">
+              <HeadacheForm onSuccess={() => {}} isDialog={true} mode="create" />
+            </div>
           </div>
         </div>
       </header>
@@ -122,7 +115,6 @@ export function Nav() {
               <HeadacheForm 
                 onSuccess={() => {
                   setIsFormOpen(false);
-                  // Refresh data if needed
                 }} 
                 onCancel={() => setIsFormOpen(false)}
                 isDialog={false}

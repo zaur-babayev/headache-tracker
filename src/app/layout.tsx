@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Nav } from '@/components/nav';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -21,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body className={`font-sans antialiased min-h-screen bg-background text-foreground ${inter.className}`}>
+      <body className={`font-sans antialiased bg-background text-foreground ${inter.className}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -29,7 +30,12 @@ export default function RootLayout({
           forcedTheme="dark"
           disableTransitionOnChange
         >
-          {children}
+          <div className="relative min-h-screen flex flex-col">
+            <Nav />
+            <main className="flex-1">
+              {children}
+            </main>
+          </div>
           <Toaster 
             position="top-right"
             theme="dark"

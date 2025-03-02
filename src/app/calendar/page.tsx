@@ -31,7 +31,9 @@ export default function CalendarPage() {
   const fetchHeadacheEntries = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/headaches');
+      const response = await fetch('/api/headaches', {
+        credentials: 'include', // Include credentials (cookies) with the request
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch headache entries');

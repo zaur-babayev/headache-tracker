@@ -1,4 +1,0 @@
-# This is a manually created migration
-
-migration_name = "20250302_init"
-provider = "postgresql"

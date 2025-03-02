@@ -9,9 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL") // uses connection pooling
 }
 
 model HeadacheEntry {
@@ -19,9 +18,9 @@ model HeadacheEntry {
   userId      String    // Clerk user ID
   date        DateTime
   severity    Int       // 1-5 scale
-  notes       String?
-  medications String    // JSON string of ['ibuprofen', 'paracetamol']
-  triggers    String    // JSON string of ['lack-of-sleep', 'stress', etc]
+  notes       String    @default("")
+  medications String    @default("[]") // JSON string of medication names
+  triggers    String    @default("[]") // JSON string of trigger names
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }

@@ -31,13 +31,21 @@ export default function Home() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch('/api/headaches');
+      console.log('Fetching headache entries, isSignedIn:', isSignedIn);
+      const response = await fetch('/api/headaches', {
+        credentials: 'include', // Include credentials (cookies) with the request
+      });
+      
+      console.log('API Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch headache entries');
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`Failed to fetch headache entries: ${response.status} ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('Received data:', data.length, 'entries');
       setHeadacheEntries(data);
     } catch (error) {
       console.error('Error fetching headache entries:', error);
@@ -48,11 +56,34 @@ export default function Home() {
     }
   };
 
+  const testAuth = async () => {
+    try {
+      console.log('Testing auth endpoint');
+      const response = await fetch('/api/test-auth', {
+        credentials: 'include',
+      });
+      
+      console.log('Test Auth Response status:', response.status);
+      const data = await response.json();
+      console.log('Test Auth Response data:', data);
+      
+      return data;
+    } catch (error) {
+      console.error('Error testing auth:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (isAuthLoaded && !isSignedIn) {
       router.push('/sign-in');
     } else if (isSignedIn) {
-      fetchHeadacheEntries();
+      // Test auth first
+      testAuth().then(authData => {
+        console.log('Auth test complete:', authData);
+        // Then fetch headache entries
+        fetchHeadacheEntries();
+      });
     }
   }, [isAuthLoaded, isSignedIn, router]);
 

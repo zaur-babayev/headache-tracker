@@ -34,7 +34,9 @@ export default function StatisticsPage() {
   const fetchHeadacheEntries = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/headaches');
+      const response = await fetch('/api/headaches', {
+        credentials: 'include',
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch headache entries');

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 type HeadacheEntry = {
@@ -12,66 +12,84 @@ type HeadacheEntry = {
 
 export async function GET() {
   try {
-    const { userId } = auth();
+    console.log('GET /api/headaches: Starting auth check');
     
-    if (!userId) {
-      console.log('Unauthorized: No userId found in auth');
+    // Try to get the current user
+    const user = await currentUser();
+    console.log('Current user:', user ? `ID: ${user.id}` : 'No user found');
+    
+    // Also try the auth method
+    const { userId } = auth();
+    console.log('Auth userId:', userId);
+    
+    // Use user.id if available, otherwise fall back to userId
+    // For development, use a fixed user ID if no user is found
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const devUserId = 'dev_user_123'; // Development user ID
+    
+    let effectiveUserId = user?.id || userId;
+    
+    if (!effectiveUserId && isDevelopment) {
+      console.log('Using development user ID:', devUserId);
+      effectiveUserId = devUserId;
+    }
+    
+    if (!effectiveUserId) {
+      console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    console.log(`Fetching headache entries for user: ${userId}`);
-    
-    // Check if Prisma client is initialized
-    if (!prisma) {
-      console.error('Prisma client is not initialized');
-      return new NextResponse('Database Error: Prisma client not initialized', { status: 500 });
-    }
+    console.log(`Fetching headache entries for user: ${effectiveUserId}`);
 
     try {
+      // Get all headache entries for the user
       const entries = await prisma.headacheEntry.findMany({
-        where: { userId },
-        orderBy: { date: 'desc' },
-      });
-
-      console.log(`Found ${entries.length} entries for user ${userId}`);
-
-      // Parse the JSON strings back to arrays
-      const parsedEntries = entries.map(entry => {
-        try {
-          return {
-            ...entry,
-            medications: JSON.parse(entry.medications || '[]'),
-            triggers: JSON.parse(entry.triggers || '[]')
-          };
-        } catch (parseError) {
-          console.error(`Error parsing JSON for entry ${entry.id}:`, parseError);
-          return {
-            ...entry,
-            medications: [],
-            triggers: []
-          };
+        where: {
+          userId: effectiveUserId
+        },
+        orderBy: {
+          date: 'desc'
         }
       });
+
+      console.log(`Found ${entries.length} entries`);
+
+      // Parse the JSON strings back into arrays
+      const parsedEntries = entries.map(entry => ({
+        ...entry,
+        medications: JSON.parse(entry.medications || '[]'),
+        triggers: JSON.parse(entry.triggers || '[]')
+      }));
 
       return NextResponse.json(parsedEntries);
     } catch (dbError: any) {
       console.error('Database query error:', dbError.message);
-      console.error('Database query stack:', dbError.stack);
-      return new NextResponse(`Database Query Error: ${dbError.message}`, { status: 500 });
+      return new NextResponse(`Database Error: ${dbError.message}`, { status: 500 });
     }
   } catch (error: any) {
     console.error('GET /api/headaches error:', error.message);
-    console.error('Stack trace:', error.stack);
     return new NextResponse(`Server Error: ${error.message}`, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const user = await currentUser();
+    const authUserId = auth().userId;
     
-    if (!userId) {
-      console.log('Unauthorized: No userId found in auth');
+    // For development, use a fixed user ID if no user is found
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const devUserId = 'dev_user_123'; // Development user ID
+    
+    let effectiveUserId = user?.id || authUserId;
+    
+    if (!effectiveUserId && isDevelopment) {
+      console.log('Using development user ID:', devUserId);
+      effectiveUserId = devUserId;
+    }
+    
+    if (!effectiveUserId) {
+      console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -87,7 +105,7 @@ export async function POST(request: NextRequest) {
       // Convert arrays to JSON strings for storage
       const entry = await prisma.headacheEntry.create({
         data: {
-          userId,
+          userId: effectiveUserId,
           date: data.date,
           severity: data.severity,
           notes: data.notes || '',
@@ -110,10 +128,22 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const user = await currentUser();
+    const authUserId = auth().userId;
     
-    if (!userId) {
-      console.log('Unauthorized: No userId found in auth');
+    // For development, use a fixed user ID if no user is found
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const devUserId = 'dev_user_123'; // Development user ID
+    
+    let effectiveUserId = user?.id || authUserId;
+    
+    if (!effectiveUserId && isDevelopment) {
+      console.log('Using development user ID:', devUserId);
+      effectiveUserId = devUserId;
+    }
+    
+    if (!effectiveUserId) {
+      console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -135,8 +165,9 @@ export async function PUT(request: NextRequest) {
         return new NextResponse('Entry not found', { status: 404 });
       }
 
-      if (existingEntry.userId !== userId) {
-        console.log(`Unauthorized: User ${userId} attempted to update entry ${data.id} belonging to ${existingEntry.userId}`);
+      // In development mode, skip the user check
+      if (!isDevelopment && existingEntry.userId !== effectiveUserId) {
+        console.log(`Unauthorized: User ${effectiveUserId} attempted to update entry ${data.id} belonging to ${existingEntry.userId}`);
         return new NextResponse('Unauthorized', { status: 401 });
       }
 
@@ -166,21 +197,36 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const user = await currentUser();
+    const authUserId = auth().userId;
     
-    if (!userId) {
-      console.log('Unauthorized: No userId found in auth');
+    // For development, use a fixed user ID if no user is found
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const devUserId = 'dev_user_123'; // Development user ID
+    
+    let effectiveUserId = user?.id || authUserId;
+    
+    if (!effectiveUserId && isDevelopment) {
+      console.log('Using development user ID:', devUserId);
+      effectiveUserId = devUserId;
+    }
+    
+    if (!effectiveUserId) {
+      console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return new NextResponse('Missing required id parameter', { status: 400 });
-    }
-
     try {
+      // Extract the ID from the query parameters
+      const { searchParams } = new URL(request.url);
+      const id = searchParams.get('id');
+
+      if (!id) {
+        return new NextResponse('Missing ID parameter', { status: 400 });
+      }
+
+      console.log(`Attempting to delete entry with ID: ${id}`);
+
       // First verify this entry belongs to the user
       const existingEntry = await prisma.headacheEntry.findUnique({
         where: { id }
@@ -190,17 +236,18 @@ export async function DELETE(request: NextRequest) {
         return new NextResponse('Entry not found', { status: 404 });
       }
 
-      if (existingEntry.userId !== userId) {
-        console.log(`Unauthorized: User ${userId} attempted to delete entry ${id} belonging to ${existingEntry.userId}`);
+      // In development mode, skip the user check
+      if (!isDevelopment && existingEntry.userId !== effectiveUserId) {
+        console.log(`Unauthorized: User ${effectiveUserId} attempted to delete entry ${id} belonging to ${existingEntry.userId}`);
         return new NextResponse('Unauthorized', { status: 401 });
       }
 
       await prisma.headacheEntry.delete({
-        where: { id },
+        where: { id }
       });
 
       console.log(`Deleted entry with ID: ${id}`);
-      return new NextResponse(null, { status: 204 });
+      return new NextResponse('Entry deleted', { status: 200 });
     } catch (dbError: any) {
       console.error('Database delete error:', dbError.message);
       return new NextResponse(`Database Delete Error: ${dbError.message}`, { status: 500 });

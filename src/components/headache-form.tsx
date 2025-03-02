@@ -102,6 +102,7 @@ function HeadacheFormContent({
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', 
         body: JSON.stringify(headacheData),
       });
       

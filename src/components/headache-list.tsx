@@ -64,8 +64,9 @@ export function HeadacheList({ entries = [], onEntryUpdated = () => {} }: Headac
     setIsDeleting(true);
     
     try {
-      const response = await fetch(`/api/headaches/${selectedEntry.id}`, {
+      const response = await fetch(`/api/headaches?id=${selectedEntry.id}`, {
         method: 'DELETE',
+        credentials: 'include', // Include credentials (cookies) with the request
       });
       
       if (!response.ok) {

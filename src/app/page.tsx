@@ -5,6 +5,8 @@ import { HeadacheList } from '@/components/headache-list';
 import { PageContainer } from '@/components/page-container';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@clerk/nextjs';
+import { Loader2 } from 'lucide-react';
 
 type HeadacheEntry = {
   id: string;
@@ -18,6 +20,7 @@ type HeadacheEntry = {
 };
 
 export default function Home() {
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const [headacheEntries, setHeadacheEntries] = useState<HeadacheEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +47,22 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchHeadacheEntries();
-  }, []);
+    if (isSignedIn) {
+      fetchHeadacheEntries();
+    }
+  }, [isSignedIn]);
+
+  // Show loading state while auth is loading
+  if (!isAuthLoaded) {
+    return (
+      <PageContainer>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading...</span>
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>

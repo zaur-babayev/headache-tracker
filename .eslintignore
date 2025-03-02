@@ -1,0 +1,7 @@
+src/components/ui/*
+src/app/page.tsx
+src/app/statistics/page.tsx
+src/components/headache-calendar.tsx
+src/components/headache-form.tsx
+src/components/headache-list.tsx
+src/components/statistics-dashboard.tsx

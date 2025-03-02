@@ -1,4 +1,5 @@
-import { prisma } from '@/lib/db';
+import { sql } from '@vercel/postgres';
+import { getAuth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 type HeadacheEntry = {
@@ -11,29 +12,33 @@ type HeadacheEntry = {
 
 export async function GET() {
   try {
-    const entries = await prisma.headacheEntry.findMany({
-      orderBy: { date: 'desc' },
-    });
+    const { userId } = getAuth();
     
-    // Parse JSON strings back to arrays
-    const parsedEntries = entries.map(entry => ({
-      ...entry,
-      medications: JSON.parse(entry.medications),
-      triggers: JSON.parse(entry.triggers),
-    }));
-    
-    return NextResponse.json(parsedEntries);
+    if (!userId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
+    const { rows } = await sql`
+      SELECT * FROM headaches 
+      WHERE user_id = ${userId}
+      ORDER BY date DESC
+    `;
+
+    return NextResponse.json(rows);
   } catch (error) {
-    console.error('Error fetching headache entries:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch headache entries' },
-      { status: 500 }
-    );
+    console.error('Database Error:', error);
+    return new NextResponse('Database Error', { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = getAuth();
+    
+    if (!userId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
     const body: HeadacheEntry = await request.json();
     const { date, severity, notes, triggers, medications } = body;
 
@@ -44,33 +49,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const entry = await prisma.headacheEntry.create({
-      data: {
-        date: new Date(date),
-        severity: Number(severity),
-        notes: notes || null,
-        triggers: JSON.stringify(triggers || []),
-        medications: JSON.stringify(medications || []),
-      },
-    });
+    const { rows } = await sql`
+      INSERT INTO headaches (user_id, date, severity, notes, triggers, medications)
+      VALUES (${userId}, ${date}, ${severity}, ${notes}, ${triggers}, ${medications})
+      RETURNING *
+    `;
 
-    // Parse JSON strings back to arrays for response
-    return NextResponse.json({
-      ...entry,
-      medications: JSON.parse(entry.medications),
-      triggers: JSON.parse(entry.triggers),
-    }, { status: 201 });
+    return NextResponse.json(rows[0], { status: 201 });
   } catch (error) {
-    console.error('Error creating headache entry:', error);
-    return NextResponse.json(
-      { error: 'Failed to create headache entry' },
-      { status: 500 }
-    );
+    console.error('Database Error:', error);
+    return new NextResponse('Database Error', { status: 500 });
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
+    const { userId } = getAuth();
+    
+    if (!userId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
     const body = await request.json();
     const { id, date, severity, notes, triggers, medications } = body;
 
@@ -81,54 +80,57 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const entry = await prisma.headacheEntry.update({
-      where: { id },
-      data: {
-        date: new Date(date),
-        severity: Number(severity),
-        notes: notes || null,
-        triggers: JSON.stringify(triggers || []),
-        medications: JSON.stringify(medications || []),
-      },
-    });
+    const { rows } = await sql`
+      UPDATE headaches 
+      SET date = ${date},
+          severity = ${severity},
+          notes = ${notes},
+          triggers = ${triggers},
+          medications = ${medications},
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id} AND user_id = ${userId}
+      RETURNING *
+    `;
 
-    // Parse JSON strings back to arrays for response
-    return NextResponse.json({
-      ...entry,
-      medications: JSON.parse(entry.medications),
-      triggers: JSON.parse(entry.triggers),
-    });
+    if (rows.length === 0) {
+      return new NextResponse('Not Found', { status: 404 });
+    }
+
+    return NextResponse.json(rows[0]);
   } catch (error) {
-    console.error('Error updating headache entry:', error);
-    return NextResponse.json(
-      { error: 'Failed to update headache entry' },
-      { status: 500 }
-    );
+    console.error('Database Error:', error);
+    return new NextResponse('Database Error', { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
+    const { userId } = getAuth();
+    
+    if (!userId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Entry ID is required' },
-        { status: 400 }
-      );
+      return new NextResponse('Missing id', { status: 400 });
     }
 
-    await prisma.headacheEntry.delete({
-      where: { id },
-    });
+    const { rows } = await sql`
+      DELETE FROM headaches 
+      WHERE id = ${id} AND user_id = ${userId}
+      RETURNING *
+    `;
 
-    return NextResponse.json({ success: true });
+    if (rows.length === 0) {
+      return new NextResponse('Not Found', { status: 404 });
+    }
+
+    return NextResponse.json(rows[0]);
   } catch (error) {
-    console.error('Error deleting headache entry:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete headache entry' },
-      { status: 500 }
-    );
+    console.error('Database Error:', error);
+    return new NextResponse('Database Error', { status: 500 });
   }
 }

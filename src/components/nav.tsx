@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { HeadacheForm } from '@/components/headache-form';
+import { UserButton } from "@clerk/nextjs";
 
 export function Nav() {
   const pathname = usePathname();
@@ -51,8 +52,9 @@ export function Nav() {
               ))}
             </nav>
 
-            <div className="flex items-center">
+            <div className="flex items-center gap-4">
               <HeadacheForm onSuccess={() => {}} isDialog={true} mode="create" />
+              <UserButton afterSignOutUrl="/" />
             </div>
           </div>
         </div>

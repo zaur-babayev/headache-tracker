@@ -42,7 +42,7 @@ interface Statistics {
   medicationStats: { name: string; count: number }[]
 }
 
-const MEDICATION_NAMES = {
+const MEDICATION_NAMES: Record<string, string> = {
   'ibuprofen': 'Ibuprofen',
   'paracetamol': 'Paracetamol',
 };
@@ -55,23 +55,31 @@ const calculateStatistics = (entries: HeadacheEntry[]): Statistics => {
 
   entries.forEach((entry) => {
     // Severity distribution
-    severityDistribution[entry.severity - 1]++
+    if (entry.severity && entry.severity >= 1 && entry.severity <= 5) {
+      severityDistribution[entry.severity - 1]++
+    }
 
     // Monthly frequency
-    const month = new Date(entry.date).toLocaleString('default', { month: 'long' })
-    const existingMonth = monthlyFrequency.find((freq) => freq.month === month)
-    if (existingMonth) {
-      existingMonth.count++
-      existingMonth.averageSeverity = (existingMonth.averageSeverity * (existingMonth.count - 1) + entry.severity) / existingMonth.count
-    } else {
-      monthlyFrequency.push({ month, count: 1, averageSeverity: entry.severity })
+    if (entry.date) {
+      const month = new Date(entry.date).toLocaleString('default', { month: 'long' })
+      const existingMonth = monthlyFrequency.find((freq) => freq.month === month)
+      if (existingMonth) {
+        existingMonth.count++
+        existingMonth.averageSeverity = (existingMonth.averageSeverity * (existingMonth.count - 1) + (entry.severity || 0)) / existingMonth.count
+      } else {
+        monthlyFrequency.push({ month, count: 1, averageSeverity: entry.severity || 0 })
+      }
     }
 
     // Medication stats
-    entry.medications.forEach((medId) => {
-      const medName = MEDICATION_NAMES[medId as keyof typeof MEDICATION_NAMES] || medId;
-      medicationCounts.set(medName, (medicationCounts.get(medName) || 0) + 1);
-    });
+    if (entry.medications && Array.isArray(entry.medications)) {
+      entry.medications.forEach((medId) => {
+        if (medId) {
+          const medName = MEDICATION_NAMES[medId] || medId;
+          medicationCounts.set(medName, (medicationCounts.get(medName) || 0) + 1);
+        }
+      });
+    }
   })
 
   // Sort monthly frequency by date
@@ -89,7 +97,7 @@ const calculateStatistics = (entries: HeadacheEntry[]): Statistics => {
 }
 
 export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
-  const statistics = useMemo(() => calculateStatistics(entries), [entries])
+  const statistics = useMemo(() => calculateStatistics(entries || []), [entries])
 
   const headacheChartConfig = {
     count: {
@@ -121,7 +129,10 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
   }));
 
   const totalSeverity = pieChartData.reduce((acc, curr) => acc + curr.count, 0);
-  const mostCommonSeverity = statistics.severityDistribution.indexOf(Math.max(...statistics.severityDistribution)) + 1;
+  const mostCommonSeverityIndex = statistics.severityDistribution.findIndex(
+    (count) => count === Math.max(...statistics.severityDistribution)
+  );
+  const mostCommonSeverity = mostCommonSeverityIndex !== -1 ? mostCommonSeverityIndex + 1 : 0;
   const percentChange = 0; // Calculate this if you have historical data
 
   return (
@@ -135,7 +146,7 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
         <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
           <p className="text-xs font-medium text-muted-foreground">Common Severity</p>
           <p className="mt-1 text-xl font-semibold">
-            {statistics.severityDistribution.indexOf(Math.max(...statistics.severityDistribution)) + 1}
+            {mostCommonSeverity || 'N/A'}
           </p>
         </div>
         
@@ -323,7 +334,7 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
                     {pieChartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={severityDistributionConfig.colors[index]}
+                        fill={severityDistributionConfig.colors[index % severityDistributionConfig.colors.length]}
                       />
                     ))}
                     <LabelList
@@ -340,7 +351,7 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
           <CardFooter className="flex-col items-start gap-1 text-sm">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Most common: Level {statistics.severityDistribution.indexOf(Math.max(...statistics.severityDistribution)) + 1}
+              Most common: Level {mostCommonSeverity || 'N/A'}
             </div>
             <div className="text-muted-foreground">
               Showing severity distribution across {totalSeverity} headache entries

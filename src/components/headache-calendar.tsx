@@ -1,8 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,40 +34,23 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
   const [selectedEntry, setSelectedEntry] = useState<HeadacheEntry | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
-
-  // Get the day of the week for the first day of the month (0 = Sunday, 1 = Monday, etc.)
-  const startDay = monthStart.getDay();
-  
-  // Calculate how many empty cells we need at the beginning
-  const emptyCellsAtStart = startDay === 0 ? 6 : startDay - 1; // Adjust for Monday as first day
-  
-  // Create empty cells for the beginning of the month
-  const emptyCellsBefore = Array(emptyCellsAtStart).fill(null);
-  
-  // Calculate how many empty cells we need at the end to complete the grid
-  const totalCells = emptyCellsBefore.length + monthDays.length;
-  const rowsNeeded = Math.ceil(totalCells / 7);
-  const totalCellsNeeded = rowsNeeded * 7;
-  const emptyCellsAfter = Array(totalCellsNeeded - totalCells).fill(null);
+  const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+  const monthDays = Array.from({ length: monthEnd.getDate() }, (_, i) => new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i + 1));
 
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  // Helper function to get severity color
   const getSeverityColor = (severity: number) => {
     switch (severity) {
-      case 1: return "bg-[#FFE4E4]"; // Very light red
-      case 2: return "bg-[#FFB5B5]"; // Light red
-      case 3: return "bg-[#FF8585]"; // Medium red
-      case 4: return "bg-[#FF5252]"; // Dark red
-      case 5: return "bg-[#FF0000]"; // Very dark red
+      case 1: return "bg-[#FFE4E4]"; 
+      case 2: return "bg-[#FFB5B5]"; 
+      case 3: return "bg-[#FF8585]"; 
+      case 4: return "bg-[#FF5252]"; 
+      case 5: return "bg-[#FF0000]"; 
       default: return "bg-muted";
     }
   };
 
-  // Helper function to get severity text
   const getSeverityText = (severity: number) => {
     switch (severity) {
       case 1: return "Level 1";
@@ -82,15 +62,13 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
     }
   };
 
-  // Helper function to find entry for a specific date
   const findEntryForDate = (date: Date) => {
     return entries.find(entry => {
       const entryDate = new Date(entry.date);
-      return isSameDay(entryDate, date);
+      return entryDate.toDateString() === date.toDateString();
     });
   };
 
-  // Handle day click
   const handleDayClick = (day: Date) => {
     const entry = findEntryForDate(day);
     if (entry) {
@@ -99,7 +77,6 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
     }
   };
 
-  // Handle entry update
   const handleEntryUpdated = () => {
     setIsDialogOpen(false);
     if (onEntryUpdated) {
@@ -107,8 +84,8 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
     }
   };
 
-  const previousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  const previousMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
 
   return (
     <div className="space-y-4">
@@ -120,7 +97,9 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
               onClick={previousMonth}
               className="h-8 w-8 p-0"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
             </Button>
             
             <div className="font-medium">
@@ -132,7 +111,9 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
               onClick={nextMonth}
               className="h-8 w-8 p-0"
             >
-              <ChevronRight className="h-4 w-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </Button>
           </div>
 
@@ -148,17 +129,17 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
           </div>
           
           <div className="grid grid-cols-7 gap-1">
-            {emptyCellsBefore.map((_, index) => (
-              <div key={`empty-before-${index}`} className="aspect-square p-1"></div>
+            {Array.from({ length: currentMonth.getDay() }, (_, i) => (
+              <div key={`empty-before-${i}`} className="aspect-square p-1"></div>
             ))}
             
             {monthDays.map((day) => {
               const entry = findEntryForDate(day);
-              const isCurrentMonth = isSameMonth(day, currentMonth);
+              const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
               
               return (
                 <div 
-                  key={day.toString()}
+                  key={day.toDateString()}
                   className={cn(
                     "aspect-square p-1 relative rounded-md transition-colors",
                     isCurrentMonth 
@@ -168,7 +149,7 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
                   onClick={() => isCurrentMonth && handleDayClick(day)}
                 >
                   <div className="absolute top-1 right-1 text-xs font-medium">
-                    {format(day, 'd')}
+                    {day.getDate()}
                   </div>
                   
                   {entry && (
@@ -184,8 +165,8 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
               );
             })}
             
-            {emptyCellsAfter.map((_, index) => (
-              <div key={`empty-after-${index}`} className="aspect-square p-1"></div>
+            {Array.from({ length: 6 - (monthDays.length + currentMonth.getDay()) % 7 }, (_, i) => (
+              <div key={`empty-after-${i}`} className="aspect-square p-1"></div>
             ))}
           </div>
         </CardContent>

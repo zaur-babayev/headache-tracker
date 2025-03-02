@@ -1,25 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Nav } from '@/components/nav';
 import { HeadacheList } from '@/components/headache-list';
 import { PageContainer } from '@/components/page-container';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-type Medication = {
-  id: string;
-  name: string;
-  dosage?: string;
-};
 
 type HeadacheEntry = {
   id: string;
   date: string;
   severity: number;
   notes?: string;
-  triggers?: string;
-  medications: Medication[];
+  triggers: string[];
+  medications: string[];
   createdAt: string;
   updatedAt: string;
 };

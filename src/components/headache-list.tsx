@@ -26,27 +26,27 @@ type HeadacheEntry = {
 };
 
 type HeadacheListProps = {
-  entries: HeadacheEntry[];
-  onEntryUpdated: () => void;
+  entries?: HeadacheEntry[];
+  onEntryUpdated?: () => void;
 };
 
-export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
+export function HeadacheList({ entries = [], onEntryUpdated = () => {} }: HeadacheListProps) {
   const [selectedEntry, setSelectedEntry] = useState<HeadacheEntry | null>(null);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const MEDICATION_NAMES = {
+  const MEDICATION_NAMES: Record<string, string> = {
     'ibuprofen': 'Ibuprofen',
     'paracetamol': 'Paracetamol',
-  } as const;
+  };
 
-  const TRIGGER_NAMES = {
+  const TRIGGER_NAMES: Record<string, string> = {
     'lack-of-sleep': 'Lack of sleep',
     'too-much-sleep': 'Too much sleep',
     'stress': 'Stress',
     'hunger': 'Hunger',
-  } as const;
+  };
 
   const handleEdit = (entry: HeadacheEntry) => {
     setSelectedEntry(entry);
@@ -64,12 +64,8 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
     setIsDeleting(true);
     
     try {
-      const response = await fetch('/api/headaches', {
+      const response = await fetch(`/api/headaches/${selectedEntry.id}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: selectedEntry.id }),
       });
       
       if (!response.ok) {
@@ -98,7 +94,7 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
     }
   };
 
-  if (entries.length === 0) {
+  if (!entries || entries.length === 0) {
     return (
       <div className="text-center py-10">
         <p className="text-muted-foreground">No headache entries yet.</p>
@@ -115,10 +111,10 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <h3 className="font-medium leading-none">
-                    {format(new Date(entry.date), 'MMMM d, yyyy')}
+                    {entry.date ? format(new Date(entry.date), 'MMMM d, yyyy') : 'Unknown date'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {format(new Date(entry.date), 'EEEE')}
+                    {entry.date ? format(new Date(entry.date), 'EEEE') : ''}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -147,20 +143,24 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
                   <span className="text-sm">Severity {entry.severity}/5</span>
                 </div>
 
-                {entry.triggers.length > 0 && (
+                {entry.triggers && entry.triggers.length > 0 && (
                   <div className="flex items-start space-x-2">
                     <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
                     <span className="text-sm">
-                      {entry.triggers.map(trigger => TRIGGER_NAMES[trigger as keyof typeof TRIGGER_NAMES] || trigger).join(', ')}
+                      {entry.triggers.map(trigger => 
+                        trigger ? (TRIGGER_NAMES[trigger] || trigger) : ''
+                      ).filter(Boolean).join(', ')}
                     </span>
                   </div>
                 )}
 
-                {entry.medications.length > 0 && (
+                {entry.medications && entry.medications.length > 0 && (
                   <div className="flex items-start space-x-2">
                     <Pill className="h-4 w-4 text-muted-foreground mt-0.5" />
                     <span className="text-sm">
-                      {entry.medications.map(med => MEDICATION_NAMES[med as keyof typeof MEDICATION_NAMES] || med).join(', ')}
+                      {entry.medications.map(med => 
+                        med ? (MEDICATION_NAMES[med] || med) : ''
+                      ).filter(Boolean).join(', ')}
                     </span>
                   </div>
                 )}
@@ -201,10 +201,12 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogTitle>Delete Headache Entry</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Are you sure you want to delete this headache entry? This action cannot be undone.</p>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete this headache entry? This action cannot be undone.
+            </p>
           </div>
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>

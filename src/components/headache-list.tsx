@@ -32,7 +32,7 @@ type HeadacheListProps = {
 
 export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
   const [selectedEntry, setSelectedEntry] = useState<HeadacheEntry | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -50,7 +50,7 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
 
   const handleEdit = (entry: HeadacheEntry) => {
     setSelectedEntry(entry);
-    setIsEditDialogOpen(true);
+    setIsEditFormOpen(true);
   };
 
   const handleDelete = (entry: HeadacheEntry) => {
@@ -177,8 +177,8 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
         </Card>
       ))}
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      {/* Edit Form Dialog */}
+      <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Headache Entry</DialogTitle>
@@ -188,9 +188,11 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
               mode="edit"
               existingEntry={selectedEntry}
               onSuccess={() => {
-                setIsEditDialogOpen(false);
+                setIsEditFormOpen(false);
                 onEntryUpdated();
               }}
+              onCancel={() => setIsEditFormOpen(false)}
+              isDialog={false}
             />
           )}
         </DialogContent>

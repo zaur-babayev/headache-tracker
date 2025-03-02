@@ -12,6 +12,12 @@ type HeadacheEntry = {
 
 export async function GET() {
   try {
+    // In production, add extra logging
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction) {
+      console.log('Running in production mode');
+    }
+    
     console.log('GET /api/headaches: Starting auth check');
     
     // Try to get the current user
@@ -22,16 +28,22 @@ export async function GET() {
     const { userId } = auth();
     console.log('Auth userId:', userId);
     
-    // Use user.id if available, otherwise fall back to userId
     // For development, use a fixed user ID if no user is found
     const isDevelopment = process.env.NODE_ENV === 'development';
     const devUserId = 'dev_user_123'; // Development user ID
     
     let effectiveUserId = user?.id || userId;
     
+    // Only use development user ID in development mode
     if (!effectiveUserId && isDevelopment) {
       console.log('Using development user ID:', devUserId);
       effectiveUserId = devUserId;
+    }
+    
+    // Safety check: ensure we're not using the development user ID in production
+    if (isProduction && effectiveUserId === devUserId) {
+      console.error('Security error: Attempted to use development user ID in production');
+      return new NextResponse('Server Error', { status: 500 });
     }
     
     if (!effectiveUserId) {
@@ -83,9 +95,17 @@ export async function POST(request: NextRequest) {
     
     let effectiveUserId = user?.id || authUserId;
     
+    // Only use development user ID in development mode
     if (!effectiveUserId && isDevelopment) {
       console.log('Using development user ID:', devUserId);
       effectiveUserId = devUserId;
+    }
+    
+    // Safety check: ensure we're not using the development user ID in production
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && effectiveUserId === devUserId) {
+      console.error('Security error: Attempted to use development user ID in production');
+      return new NextResponse('Server Error', { status: 500 });
     }
     
     if (!effectiveUserId) {
@@ -137,9 +157,17 @@ export async function PUT(request: NextRequest) {
     
     let effectiveUserId = user?.id || authUserId;
     
+    // Only use development user ID in development mode
     if (!effectiveUserId && isDevelopment) {
       console.log('Using development user ID:', devUserId);
       effectiveUserId = devUserId;
+    }
+    
+    // Safety check: ensure we're not using the development user ID in production
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && effectiveUserId === devUserId) {
+      console.error('Security error: Attempted to use development user ID in production');
+      return new NextResponse('Server Error', { status: 500 });
     }
     
     if (!effectiveUserId) {
@@ -206,9 +234,17 @@ export async function DELETE(request: NextRequest) {
     
     let effectiveUserId = user?.id || authUserId;
     
+    // Only use development user ID in development mode
     if (!effectiveUserId && isDevelopment) {
       console.log('Using development user ID:', devUserId);
       effectiveUserId = devUserId;
+    }
+    
+    // Safety check: ensure we're not using the development user ID in production
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && effectiveUserId === devUserId) {
+      console.error('Security error: Attempted to use development user ID in production');
+      return new NextResponse('Server Error', { status: 500 });
     }
     
     if (!effectiveUserId) {

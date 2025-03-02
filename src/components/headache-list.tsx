@@ -89,12 +89,12 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
 
   const getSeverityColor = (severity: number) => {
     switch (severity) {
-      case 1: return 'bg-[#FFE4E4] text-black';
-      case 2: return 'bg-[#FFB5B5] text-black';
-      case 3: return 'bg-[#FF8585] text-black';
-      case 4: return 'bg-[#FF5252] text-black';
-      case 5: return 'bg-[#FF0000] text-black';
-      default: return 'bg-gray-100 text-black';
+      case 1: return 'bg-[#FFE4E4]';
+      case 2: return 'bg-[#FFB5B5]';
+      case 3: return 'bg-[#FF8585]';
+      case 4: return 'bg-[#FF5252]';
+      case 5: return 'bg-[#FF0000]';
+      default: return 'bg-gray-100';
     }
   };
 
@@ -143,9 +143,8 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
 
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className={getSeverityColor(entry.severity)}>
-                    Severity {entry.severity}/5
-                  </Badge>
+                  <div className={`w-3 h-3 rounded-full ${getSeverityColor(entry.severity)}`} />
+                  <span className="text-sm">Severity {entry.severity}/5</span>
                 </div>
 
                 {entry.triggers.length > 0 && (

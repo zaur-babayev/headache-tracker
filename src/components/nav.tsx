@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Calendar, BarChart3, Home, Plus, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { HeadacheForm } from '@/components/headache-form';
@@ -62,7 +61,6 @@ export function Nav() {
 
           <div className="flex flex-1 items-center justify-end space-x-4">
             <HeadacheForm onSuccess={() => {}} isDialog={true} mode="create" />
-            <ThemeToggle />
           </div>
         </div>
       </header>

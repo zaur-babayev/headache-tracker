@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { HeadacheForm } from '@/components/headache-form';
 import { toast } from 'sonner';
+import { Pencil, Trash2, Pill, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 type Medication = {
   id: string;
@@ -62,8 +64,12 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
     setIsDeleting(true);
     
     try {
-      const response = await fetch(`/api/headaches/${selectedEntry.id}`, {
+      const response = await fetch('/api/headaches', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: selectedEntry.id }),
       });
       
       if (!response.ok) {
@@ -83,19 +89,19 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
 
   const getSeverityColor = (severity: number) => {
     switch (severity) {
-      case 1: return 'bg-green-100 text-green-800';
-      case 2: return 'bg-blue-100 text-blue-800';
-      case 3: return 'bg-yellow-100 text-yellow-800';
-      case 4: return 'bg-orange-100 text-orange-800';
-      case 5: return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 1: return 'bg-[#FFE4E4] text-black';
+      case 2: return 'bg-[#FFB5B5] text-black';
+      case 3: return 'bg-[#FF8585] text-black';
+      case 4: return 'bg-[#FF5252] text-black';
+      case 5: return 'bg-[#FF0000] text-black';
+      default: return 'bg-gray-100 text-black';
     }
   };
 
   if (entries.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className="text-gray-500">No headache entries yet.</p>
+        <p className="text-muted-foreground">No headache entries yet.</p>
       </div>
     );
   }
@@ -103,58 +109,71 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
   return (
     <div className="space-y-4">
       {entries.map((entry) => (
-        <Card key={entry.id}>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-lg">
-                {format(new Date(entry.date), 'PPP')}
-              </CardTitle>
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(entry)}>
-                  Edit
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDelete(entry)}>
-                  Delete
-                </Button>
+        <Card key={entry.id} className="overflow-hidden bg-card">
+          <div className="flex items-start justify-between p-6">
+            <div className="space-y-4 flex-grow">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h3 className="font-medium leading-none">
+                    {format(new Date(entry.date), 'MMMM d, yyyy')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {format(new Date(entry.date), 'EEEE')}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => handleEdit(entry)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => handleDelete(entry)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className={getSeverityColor(entry.severity)}>
+                    Severity {entry.severity}/5
+                  </Badge>
+                </div>
+
+                {entry.triggers.length > 0 && (
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <span className="text-sm">
+                      {entry.triggers.map(trigger => TRIGGER_NAMES[trigger as keyof typeof TRIGGER_NAMES] || trigger).join(', ')}
+                    </span>
+                  </div>
+                )}
+
+                {entry.medications.length > 0 && (
+                  <div className="flex items-start space-x-2">
+                    <Pill className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <span className="text-sm">
+                      {entry.medications.map(med => MEDICATION_NAMES[med as keyof typeof MEDICATION_NAMES] || med).join(', ')}
+                    </span>
+                  </div>
+                )}
+
+                {entry.notes && (
+                  <div className="text-sm text-muted-foreground border-t pt-3 mt-3">
+                    {entry.notes}
+                  </div>
+                )}
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <span className="font-medium mr-2">Severity:</span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(entry.severity)}`}>
-                  {entry.severity} / 5
-                </span>
-              </div>
-              
-              {entry.triggers.length > 0 && (
-                <div>
-                  <span className="font-medium">Triggers:</span>{' '}
-                  {entry.triggers.map(trigger => TRIGGER_NAMES[trigger as keyof typeof TRIGGER_NAMES] || trigger).join(', ')}
-                </div>
-              )}
-              
-              {entry.notes && (
-                <div>
-                  <span className="font-medium">Notes:</span> {entry.notes}
-                </div>
-              )}
-              
-              {entry.medications.length > 0 && (
-                <div>
-                  <span className="font-medium">Medications:</span>
-                  <ul className="list-disc list-inside ml-2 mt-1">
-                    {entry.medications.map((med) => (
-                      <li key={med}>
-                        {MEDICATION_NAMES[med as keyof typeof MEDICATION_NAMES] || med}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </CardContent>
+          </div>
         </Card>
       ))}
 
@@ -167,14 +186,7 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
           {selectedEntry && (
             <HeadacheForm
               mode="edit"
-              initialData={{
-                id: selectedEntry.id,
-                date: new Date(selectedEntry.date),
-                severity: selectedEntry.severity,
-                notes: selectedEntry.notes,
-                triggers: selectedEntry.triggers,
-                medications: selectedEntry.medications,
-              }}
+              existingEntry={selectedEntry}
               onSuccess={() => {
                 setIsEditDialogOpen(false);
                 onEntryUpdated();

@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model HeadacheEntry {
+  id          String    @id @default(cuid())
+  date        DateTime
+  severity    Int       // 1-5 scale
+  notes       String?
+  medications Medication[]
+  triggers    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Medication {
+  id             String          @id @default(cuid())
+  name           String
+  dosage         String?
+  headacheEntry  HeadacheEntry   @relation(fields: [headacheEntryId], references: [id], onDelete: Cascade)
+  headacheEntryId String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}

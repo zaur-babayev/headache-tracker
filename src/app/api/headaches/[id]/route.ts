@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { getAuth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
@@ -6,11 +7,17 @@ export async function GET(
   context: { params: { id: string } }
 ) {
   try {
+    const { userId } = getAuth();
+    
+    if (!userId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+    
     const id = context.params.id;
-    const headacheEntry = await prisma.headacheEntry.findUnique({
-      where: { id },
-      include: {
-        medications: true,
+    const headacheEntry = await prisma.headacheEntry.findFirst({
+      where: { 
+        id,
+        userId 
       },
     });
 
@@ -21,7 +28,14 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(headacheEntry);
+    // Parse the JSON strings back to arrays
+    const parsedEntry = {
+      ...headacheEntry,
+      medications: JSON.parse(headacheEntry.medications),
+      triggers: JSON.parse(headacheEntry.triggers)
+    };
+
+    return NextResponse.json(parsedEntry);
   } catch (error) {
     console.error('Error fetching headache entry:', error);
     return NextResponse.json(
@@ -36,13 +50,22 @@ export async function PUT(
   context: { params: { id: string } }
 ) {
   try {
+    const { userId } = getAuth();
+    
+    if (!userId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+    
     const id = context.params.id;
     const body = await request.json();
     const { date, severity, notes, triggers, medications } = body;
 
-    // Check if the headache entry exists
-    const existingEntry = await prisma.headacheEntry.findUnique({
-      where: { id },
+    // Check if the headache entry exists and belongs to the user
+    const existingEntry = await prisma.headacheEntry.findFirst({
+      where: { 
+        id,
+        userId 
+      },
     });
 
     if (!existingEntry) {
@@ -53,34 +76,25 @@ export async function PUT(
     }
 
     // Update the headache entry
-    const updatedEntry = await prisma.$transaction(async (tx) => {
-      // Delete existing medications
-      await tx.medication.deleteMany({
-        where: { headacheEntryId: id },
-      });
-
-      // Update the headache entry
-      return tx.headacheEntry.update({
-        where: { id },
-        data: {
-          date: date ? new Date(date) : undefined,
-          severity: severity ? Number(severity) : undefined,
-          notes,
-          triggers,
-          medications: {
-            create: medications?.map((med: { name: string; dosage?: string }) => ({
-              name: med.name,
-              dosage: med.dosage || null,
-            })) || [],
-          },
-        },
-        include: {
-          medications: true,
-        },
-      });
+    const updatedEntry = await prisma.headacheEntry.update({
+      where: { id },
+      data: {
+        date: date ? new Date(date) : undefined,
+        severity: severity ? Number(severity) : undefined,
+        notes,
+        triggers: JSON.stringify(triggers || []),
+        medications: JSON.stringify(medications || []),
+      },
     });
 
-    return NextResponse.json(updatedEntry);
+    // Parse the JSON strings back to arrays for the response
+    const parsedEntry = {
+      ...updatedEntry,
+      medications: JSON.parse(updatedEntry.medications),
+      triggers: JSON.parse(updatedEntry.triggers)
+    };
+
+    return NextResponse.json(parsedEntry);
   } catch (error) {
     console.error('Error updating headache entry:', error);
     return NextResponse.json(
@@ -95,11 +109,20 @@ export async function DELETE(
   context: { params: { id: string } }
 ) {
   try {
+    const { userId } = getAuth();
+    
+    if (!userId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+    
     const id = context.params.id;
 
-    // Check if the headache entry exists
-    const existingEntry = await prisma.headacheEntry.findUnique({
-      where: { id },
+    // Check if the headache entry exists and belongs to the user
+    const existingEntry = await prisma.headacheEntry.findFirst({
+      where: { 
+        id,
+        userId 
+      },
     });
 
     if (!existingEntry) {
@@ -109,7 +132,7 @@ export async function DELETE(
       );
     }
 
-    // Delete the headache entry (medications will be deleted due to cascade)
+    // Delete the headache entry
     await prisma.headacheEntry.delete({
       where: { id },
     });

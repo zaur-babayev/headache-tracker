@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { prisma } from '@/lib/db';
 import { getAuth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -18,13 +18,19 @@ export async function GET() {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { rows } = await sql`
-      SELECT * FROM headaches 
-      WHERE user_id = ${userId}
-      ORDER BY date DESC
-    `;
+    const entries = await prisma.headacheEntry.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+    });
 
-    return NextResponse.json(rows);
+    // Parse the JSON strings back to arrays
+    const parsedEntries = entries.map(entry => ({
+      ...entry,
+      medications: JSON.parse(entry.medications),
+      triggers: JSON.parse(entry.triggers)
+    }));
+
+    return NextResponse.json(parsedEntries);
   } catch (error) {
     console.error('Database Error:', error);
     return new NextResponse('Database Error', { status: 500 });
@@ -49,13 +55,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { rows } = await sql`
-      INSERT INTO headaches (user_id, date, severity, notes, triggers, medications)
-      VALUES (${userId}, ${date}, ${severity}, ${notes}, ${triggers}, ${medications})
-      RETURNING *
-    `;
+    const newEntry = await prisma.headacheEntry.create({
+      data: {
+        userId,
+        date: new Date(date),
+        severity,
+        notes: notes || null,
+        triggers: JSON.stringify(triggers || []),
+        medications: JSON.stringify(medications || []),
+      },
+    });
 
-    return NextResponse.json(rows[0], { status: 201 });
+    // Parse the JSON strings back to arrays for the response
+    const parsedEntry = {
+      ...newEntry,
+      medications: JSON.parse(newEntry.medications),
+      triggers: JSON.parse(newEntry.triggers)
+    };
+
+    return NextResponse.json(parsedEntry, { status: 201 });
   } catch (error) {
     console.error('Database Error:', error);
     return new NextResponse('Database Error', { status: 500 });
@@ -80,23 +98,40 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { rows } = await sql`
-      UPDATE headaches 
-      SET date = ${date},
-          severity = ${severity},
-          notes = ${notes},
-          triggers = ${triggers},
-          medications = ${medications},
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${id} AND user_id = ${userId}
-      RETURNING *
-    `;
+    // Check if the entry exists and belongs to the user
+    const existingEntry = await prisma.headacheEntry.findFirst({
+      where: {
+        id,
+        userId
+      }
+    });
 
-    if (rows.length === 0) {
-      return new NextResponse('Not Found', { status: 404 });
+    if (!existingEntry) {
+      return NextResponse.json(
+        { error: 'Entry not found or unauthorized' },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(rows[0]);
+    const updatedEntry = await prisma.headacheEntry.update({
+      where: { id },
+      data: {
+        date: date ? new Date(date) : undefined,
+        severity: severity !== undefined ? severity : undefined,
+        notes: notes !== undefined ? notes : undefined,
+        triggers: triggers ? JSON.stringify(triggers) : undefined,
+        medications: medications ? JSON.stringify(medications) : undefined,
+      },
+    });
+
+    // Parse the JSON strings back to arrays for the response
+    const parsedEntry = {
+      ...updatedEntry,
+      medications: JSON.parse(updatedEntry.medications),
+      triggers: JSON.parse(updatedEntry.triggers)
+    };
+
+    return NextResponse.json(parsedEntry);
   } catch (error) {
     console.error('Database Error:', error);
     return new NextResponse('Database Error', { status: 500 });
@@ -118,17 +153,26 @@ export async function DELETE(request: NextRequest) {
       return new NextResponse('Missing id', { status: 400 });
     }
 
-    const { rows } = await sql`
-      DELETE FROM headaches 
-      WHERE id = ${id} AND user_id = ${userId}
-      RETURNING *
-    `;
+    // Check if the entry exists and belongs to the user
+    const existingEntry = await prisma.headacheEntry.findFirst({
+      where: {
+        id,
+        userId
+      }
+    });
 
-    if (rows.length === 0) {
-      return new NextResponse('Not Found', { status: 404 });
+    if (!existingEntry) {
+      return NextResponse.json(
+        { error: 'Entry not found or unauthorized' },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(rows[0]);
+    const deletedEntry = await prisma.headacheEntry.delete({
+      where: { id },
+    });
+
+    return NextResponse.json(deletedEntry);
   } catch (error) {
     console.error('Database Error:', error);
     return new NextResponse('Database Error', { status: 500 });

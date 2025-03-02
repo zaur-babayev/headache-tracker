@@ -21,8 +21,8 @@ type HeadacheEntry = {
   date: string;
   severity: number;
   notes?: string;
-  triggers?: string;
-  medications: Medication[];
+  triggers: string[];
+  medications: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -223,7 +223,7 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
               {selectedEntry.triggers && (
                 <div>
                   <div className="text-sm font-medium mb-1">Triggers</div>
-                  <div className="text-sm text-muted-foreground">{selectedEntry.triggers}</div>
+                  <div className="text-sm text-muted-foreground">{selectedEntry.triggers.join(', ')}</div>
                 </div>
               )}
               
@@ -232,8 +232,8 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
                   <div className="text-sm font-medium mb-1">Medications</div>
                   <div className="space-y-1">
                     {selectedEntry.medications.map(med => (
-                      <div key={med.id} className="text-sm text-muted-foreground">
-                        {med.name} {med.dosage && `- ${med.dosage}`}
+                      <div key={med} className="text-sm text-muted-foreground">
+                        {med}
                       </div>
                     ))}
                   </div>

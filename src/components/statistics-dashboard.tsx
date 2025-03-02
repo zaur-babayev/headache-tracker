@@ -29,8 +29,8 @@ type HeadacheEntry = {
   date: string;
   severity: number;
   notes?: string;
-  triggers?: string;
-  medications: { id: string; name: string; dosage?: string }[];
+  triggers: string[];
+  medications: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -41,6 +41,11 @@ interface Statistics {
   monthlyFrequency: { month: string; count: number; averageSeverity: number }[]
   medicationStats: { name: string; count: number }[]
 }
+
+const MEDICATION_NAMES = {
+  'ibuprofen': 'Ibuprofen',
+  'paracetamol': 'Paracetamol',
+};
 
 const calculateStatistics = (entries: HeadacheEntry[]): Statistics => {
   const totalHeadaches = entries.length
@@ -63,11 +68,10 @@ const calculateStatistics = (entries: HeadacheEntry[]): Statistics => {
     }
 
     // Medication stats
-    entry.medications.forEach((med) => {
-      if (med.name) {
-        medicationCounts.set(med.name, (medicationCounts.get(med.name) || 0) + 1)
-      }
-    })
+    entry.medications.forEach((medId) => {
+      const medName = MEDICATION_NAMES[medId as keyof typeof MEDICATION_NAMES] || medId;
+      medicationCounts.set(medName, (medicationCounts.get(medName) || 0) + 1);
+    });
   })
 
   // Sort monthly frequency by date
@@ -138,7 +142,7 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
         <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
           <p className="text-xs font-medium text-muted-foreground">Top Medication</p>
           <p className="mt-1 text-xl font-semibold truncate max-w-[120px] text-center">
-            {statistics.medicationStats.length > 0 && statistics.medicationStats[0].name !== "" 
+            {statistics.medicationStats.length > 0 
               ? statistics.medicationStats[0].name 
               : 'None'}
           </p>

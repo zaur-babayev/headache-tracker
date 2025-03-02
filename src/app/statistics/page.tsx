@@ -19,8 +19,8 @@ type HeadacheEntry = {
   date: string;
   severity: number;
   notes?: string;
-  triggers?: string;
-  medications: Medication[];
+  triggers: string[];
+  medications: string[];
   createdAt: string;
   updatedAt: string;
 };

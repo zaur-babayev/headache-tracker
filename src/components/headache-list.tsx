@@ -17,8 +17,8 @@ type HeadacheEntry = {
   date: string;
   severity: number;
   notes?: string;
-  triggers?: string;
-  medications: Medication[];
+  triggers: string[];
+  medications: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -33,6 +33,18 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const MEDICATION_NAMES = {
+    'ibuprofen': 'Ibuprofen',
+    'paracetamol': 'Paracetamol',
+  } as const;
+
+  const TRIGGER_NAMES = {
+    'lack-of-sleep': 'Lack of sleep',
+    'too-much-sleep': 'Too much sleep',
+    'stress': 'Stress',
+    'hunger': 'Hunger',
+  } as const;
 
   const handleEdit = (entry: HeadacheEntry) => {
     setSelectedEntry(entry);
@@ -116,9 +128,10 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
                 </span>
               </div>
               
-              {entry.triggers && (
+              {entry.triggers.length > 0 && (
                 <div>
-                  <span className="font-medium">Triggers:</span> {entry.triggers}
+                  <span className="font-medium">Triggers:</span>{' '}
+                  {entry.triggers.map(trigger => TRIGGER_NAMES[trigger as keyof typeof TRIGGER_NAMES] || trigger).join(', ')}
                 </div>
               )}
               
@@ -133,8 +146,8 @@ export function HeadacheList({ entries, onEntryUpdated }: HeadacheListProps) {
                   <span className="font-medium">Medications:</span>
                   <ul className="list-disc list-inside ml-2 mt-1">
                     {entry.medications.map((med) => (
-                      <li key={med.id}>
-                        {med.name} {med.dosage && <span className="text-sm text-gray-500">({med.dosage})</span>}
+                      <li key={med}>
+                        {MEDICATION_NAMES[med as keyof typeof MEDICATION_NAMES] || med}
                       </li>
                     ))}
                   </ul>

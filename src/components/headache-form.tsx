@@ -8,11 +8,21 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Plus, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+
+const MEDICATIONS = [
+  { id: 'ibuprofen', name: 'Ibuprofen' },
+  { id: 'paracetamol', name: 'Paracetamol' },
+];
+
+const TRIGGERS = [
+  { id: 'lack-of-sleep', label: 'Lack of sleep' },
+  { id: 'too-much-sleep', label: 'Too much sleep' },
+  { id: 'stress', label: 'Stress' },
+  { id: 'hunger', label: 'Hunger' },
+];
 
 type HeadacheFormProps = {
   onSuccess?: () => void;
@@ -22,16 +32,16 @@ type HeadacheFormProps = {
     date: string | Date;
     severity: number;
     notes?: string;
-    triggers?: string;
-    medications?: { id: string; name: string; dosage?: string }[];
+    triggers?: string[];
+    medications?: string[];
   };
   existingEntry?: {
     id: string;
     date: string;
     severity: number;
     notes?: string;
-    triggers?: string;
-    medications: { id: string; name: string; dosage?: string }[];
+    triggers?: string[];
+    medications: string[];
     createdAt: string;
     updatedAt: string;
   };
@@ -39,7 +49,6 @@ type HeadacheFormProps = {
   isDialog?: boolean;
 };
 
-// Separate the form content from the dialog wrapper
 function HeadacheFormContent({ 
   onSuccess, 
   onCancel, 
@@ -48,7 +57,6 @@ function HeadacheFormContent({
   mode = 'create',
   isDialog = true
 }: HeadacheFormProps) {
-  // Combine initialValues and existingEntry to support both formats
   const entryData = existingEntry || initialValues;
   
   const initialDate = entryData?.date 
@@ -60,33 +68,14 @@ function HeadacheFormContent({
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [severity, setSeverity] = useState<number>(entryData?.severity || 3);
   const [notes, setNotes] = useState<string>(entryData?.notes || '');
-  const [triggers, setTriggers] = useState<string>(entryData?.triggers || '');
-  const [medications, setMedications] = useState<{ id: string; name: string; dosage?: string }[]>(
+  const [selectedTriggers, setSelectedTriggers] = useState<string[]>(
+    entryData?.triggers || []
+  );
+  const [selectedMedications, setSelectedMedications] = useState<string[]>(
     entryData?.medications || []
   );
-  const [newMedication, setNewMedication] = useState<string>('');
-  const [newDosage, setNewDosage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
-  const handleAddMedication = () => {
-    if (newMedication.trim()) {
-      setMedications([
-        ...medications,
-        {
-          id: Date.now().toString(),
-          name: newMedication.trim(),
-          dosage: newDosage.trim() || undefined,
-        },
-      ]);
-      setNewMedication('');
-      setNewDosage('');
-    }
-  };
-
-  const handleRemoveMedication = (id: string) => {
-    setMedications(medications.filter((med) => med.id !== id));
-  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,15 +93,12 @@ function HeadacheFormContent({
         date: date.toISOString(),
         severity,
         notes: notes || undefined,
-        triggers: triggers || undefined,
-        medications,
+        triggers: selectedTriggers,
+        medications: selectedMedications,
       };
       
-      const endpoint = mode === 'create' ? '/api/headaches' : `/api/headaches/${entryData?.id}`;
-      const method = mode === 'create' ? 'POST' : 'PUT';
-      
-      const response = await fetch(endpoint, {
-        method,
+      const response = await fetch('/api/headaches', {
+        method: mode === 'create' ? 'POST' : 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -141,7 +127,7 @@ function HeadacheFormContent({
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="date">Date</Label>
         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -191,88 +177,78 @@ function HeadacheFormContent({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="triggers">Triggers (Optional)</Label>
-        <Input
-          id="triggers"
-          value={triggers}
-          onChange={(e) => setTriggers(e.target.value)}
-          placeholder="E.g., stress, lack of sleep, food"
-        />
+      <div className="space-y-3">
+        <Label>Triggers</Label>
+        <div className="grid grid-cols-2 gap-4">
+          {TRIGGERS.map((trigger) => (
+            <div key={trigger.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={trigger.id}
+                checked={selectedTriggers.includes(trigger.id)}
+                onCheckedChange={(checked) => {
+                  setSelectedTriggers(
+                    checked
+                      ? [...selectedTriggers, trigger.id]
+                      : selectedTriggers.filter((id) => id !== trigger.id)
+                  );
+                }}
+              />
+              <Label
+                htmlFor={trigger.id}
+                className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {trigger.label}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <Label>Medications</Label>
+        <div className="grid grid-cols-2 gap-4">
+          {MEDICATIONS.map((medication) => (
+            <div key={medication.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={medication.id}
+                checked={selectedMedications.includes(medication.id)}
+                onCheckedChange={(checked) => {
+                  setSelectedMedications(
+                    checked
+                      ? [...selectedMedications, medication.id]
+                      : selectedMedications.filter((id) => id !== medication.id)
+                  );
+                }}
+              />
+              <Label
+                htmlFor={medication.id}
+                className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {medication.name}
+              </Label>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes (Optional)</Label>
-        <Textarea
+        <textarea
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Additional details about this headache episode"
-          rows={3}
+          className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          placeholder="Any additional notes..."
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>Medications (Optional)</Label>
-        <div className="flex space-x-2">
-          <Input
-            value={newMedication}
-            onChange={(e) => setNewMedication(e.target.value)}
-            placeholder="Medication name"
-            className="flex-1"
-          />
-          <Input
-            value={newDosage}
-            onChange={(e) => setNewDosage(e.target.value)}
-            placeholder="Dosage (optional)"
-            className="flex-1"
-          />
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="icon"
-            onClick={handleAddMedication}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {medications.length > 0 && (
-          <div className="mt-2 space-y-2">
-            {medications.map((med) => (
-              <div 
-                key={med.id} 
-                className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
-              >
-                <div>
-                  <span className="font-medium">{med.name}</span>
-                  {med.dosage && (
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      {med.dosage}
-                    </span>
-                  )}
-                </div>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => handleRemoveMedication(med.id)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex gap-2 justify-end">
+      <div className="flex justify-end space-x-2">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
         )}
-        <Button type="submit" className={onCancel ? '' : 'w-full'} disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : mode === 'create' ? 'Add Entry' : 'Update Entry'}
         </Button>
       </div>

@@ -83,7 +83,7 @@ export default function Home() {
           <Tabs defaultValue="recent" className="w-full">
             <TabsList className="w-full grid grid-cols-2">
               <TabsTrigger value="recent">Recent Entries</TabsTrigger>
-              <TabsTrigger value="all">All Entries</TabsTrigger>
+              <TabsTrigger value="all">All Entries ({headacheEntries.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="recent" className="mt-6">
               <HeadacheList 

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { TrendingUp } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, LabelList, Pie, PieChart, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, Pie, PieChart, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
 
 import {
   Card,
@@ -101,36 +101,19 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
     },
   } as ChartConfig;
 
-  const pieChartConfig = {
-    count: {
-      label: "Count",
-    },
-    level1: {
-      label: "Level 1",
-      color: "#60A5FA", // blue
-    },
-    level2: {
-      label: "Level 2",
-      color: "#34D399", // green
-    },
-    level3: {
-      label: "Level 3",
-      color: "#FBBF24", // yellow
-    },
-    level4: {
-      label: "Level 4",
-      color: "#F87171", // red
-    },
-    level5: {
-      label: "Level 5",
-      color: "#EF4444", // darker red
-    },
+  const severityDistributionConfig = {
+    colors: [
+      "#FFE4E4", // Level 1 - Very light red
+      "#FFB5B5", // Level 2 - Light red
+      "#FF8585", // Level 3 - Medium red
+      "#FF5252", // Level 4 - Dark red
+      "#FF0000", // Level 5 - Very dark red
+    ],
   } as ChartConfig;
 
   const pieChartData = statistics.severityDistribution.map((count, index) => ({
     name: `Level ${index + 1}`,
     count,
-    fill: pieChartConfig[`level${index + 1}`].color,
   }));
 
   const totalSeverity = pieChartData.reduce((acc, curr) => acc + curr.count, 0);
@@ -189,7 +172,16 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
                     tickFormatter={(value) => value.slice(0, 3)}
                     stroke="rgba(255,255,255,0.5)"
                   />
-                  <YAxis hide />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    fontSize={12}
+                    className="fill-muted-foreground"
+                    tick={false}
+                    width={0}
+                    domain={[0, 4]}
+                    tickCount={8}
+                  />
                   <ChartTooltip
                     cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                     content={<ChartTooltipContent hideLabel />}
@@ -245,7 +237,16 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
                     tickFormatter={(value) => value.slice(0, 3)}
                     stroke="rgba(255,255,255,0.5)"
                   />
-                  <YAxis hide domain={[0, 5]} />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    fontSize={12}
+                    className="fill-muted-foreground"
+                    tick={false}
+                    width={0}
+                    domain={[0, 5]}
+                    tickCount={8}
+                  />
                   <ChartTooltip
                     cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                     content={<ChartTooltipContent hideLabel />}
@@ -277,40 +278,67 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
         </Card>
 
         <Card className="lg:col-span-2 flex flex-col">
-          <CardHeader className="items-center pb-0">
+          <CardHeader>
             <CardTitle>Severity Distribution</CardTitle>
             <CardDescription>Distribution of headache severity levels</CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 pb-0">
-            <ChartContainer
-              config={pieChartConfig}
-              className="mx-auto aspect-square max-h-[300px] px-0"
-            >
+          <CardContent>
+            <ChartContainer config={severityDistributionConfig}>
               <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <ChartTooltip
-                    content={<ChartTooltipContent nameKey="count" hideLabel />}
+                <BarChart 
+                  data={pieChartData}
+                  margin={{ top: 16, right: 16, bottom: 0, left: 0 }}
+                >
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    horizontal={true}
+                    vertical={false}
+                    className="stroke-muted"
                   />
-                  <Pie
-                    data={pieChartData}
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    fontSize={12}
+                    className="fill-muted-foreground"
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    fontSize={12}
+                    className="fill-muted-foreground"
+                    tick={false}
+                    width={0}
+                    domain={[0, 4]}
+                    tickCount={8}
+                  />
+                  <Bar
                     dataKey="count"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={120}
-                    innerRadius={60}
-                    labelLine={true}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  />
-                </PieChart>
+                    radius={[4, 4, 0, 0]}
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={severityDistributionConfig.colors[index]}
+                      />
+                    ))}
+                    <LabelList
+                      dataKey="count"
+                      position="top"
+                      className="fill-foreground text-xs"
+                      formatter={(value: number) => value}
+                    />
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
-          <CardFooter className="flex-col gap-2 text-sm">
-            <div className="flex items-center gap-2 font-medium leading-none">
-              Most common: Level {mostCommonSeverity} <TrendingUp className="h-4 w-4" />
+          <CardFooter className="flex-col items-start gap-1 text-sm">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Most common: Level {statistics.severityDistribution.indexOf(Math.max(...statistics.severityDistribution)) + 1}
             </div>
-            <div className="leading-none text-muted-foreground">
+            <div className="text-muted-foreground">
               Showing severity distribution across {totalSeverity} headache entries
             </div>
           </CardFooter>

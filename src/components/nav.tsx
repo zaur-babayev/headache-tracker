@@ -60,6 +60,20 @@ export function Nav() {
         </div>
       </header>
 
+      {/* Top header for mobile */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+        <div className="h-16 px-4">
+          <div className="flex h-full items-center justify-between">
+            <h1 className="text-lg font-semibold">
+              {pathname === '/' && 'Dashboard'}
+              {pathname === '/statistics' && 'Statistics'}
+              {pathname === '/calendar' && 'Calendar'}
+            </h1>
+            <UserButton afterSignOutUrl="/" />
+          </div>
+        </div>
+      </header>
+
       {/* Bottom navigation for mobile */}
       <nav className="fixed bottom-0 left-0 z-50 w-full h-16 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] md:hidden">
         <div className="grid h-full grid-cols-3 mx-auto">

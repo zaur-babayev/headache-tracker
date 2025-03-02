@@ -87,31 +87,7 @@ export default function StatisticsPage() {
                 <p className="text-muted-foreground text-sm">No headache entries yet. Use the "Add Entry" button to record your first headache.</p>
               </div>
             ) : (
-              <>
-                <StatisticsDashboard entries={headacheEntries} />
-                
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-lg bg-card py-4 text-card-foreground shadow-sm">
-                    <h3 className="font-medium mb-2">Understanding Your Data</h3>
-                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                      <li>Severity distribution shows the frequency of each pain level</li>
-                      <li>Monthly trends help identify seasonal patterns</li>
-                      <li>Day of week analysis can reveal lifestyle triggers</li>
-                      <li>More data leads to more accurate insights</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="rounded-lg bg-card py-4 text-card-foreground shadow-sm">
-                    <h3 className="font-medium mb-2">Tips for Analysis</h3>
-                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                      <li>Look for patterns in severity across different time periods</li>
-                      <li>Compare your headache frequency with potential triggers</li>
-                      <li>Track the effectiveness of medications over time</li>
-                      <li>Share these insights with your healthcare provider</li>
-                    </ul>
-                  </div>
-                </div>
-              </>
+              <StatisticsDashboard entries={headacheEntries} />
             )}
           </TabsContent>
           
@@ -133,44 +109,6 @@ export default function StatisticsPage() {
               ) : (
                 <HeadacheCalendar entries={headacheEntries} />
               )}
-            </div>
-            
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-lg bg-card py-4 text-card-foreground shadow-sm">
-                <h3 className="font-medium mb-2">Calendar Legend</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 rounded-full bg-red-500 mr-2"></div>
-                    <span className="text-sm">Severe (Level 5)</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 rounded-full bg-orange-500 mr-2"></div>
-                    <span className="text-sm">Moderate-Severe (Level 4)</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 rounded-full bg-yellow-500 mr-2"></div>
-                    <span className="text-sm">Moderate (Level 3)</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 rounded-full bg-green-500 mr-2"></div>
-                    <span className="text-sm">Mild-Moderate (Level 2)</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 rounded-full bg-blue-500 mr-2"></div>
-                    <span className="text-sm">Mild (Level 1)</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="sm:col-span-2 rounded-lg bg-card py-4 text-card-foreground shadow-sm">
-                <h3 className="font-medium mb-2">Calendar Tips</h3>
-                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                  <li>Click on a date with a headache to view details</li>
-                  <li>Use the month navigation to explore patterns over time</li>
-                  <li>Color intensity indicates headache severity</li>
-                  <li>Empty dates indicate no recorded headaches</li>
-                </ul>
-              </div>
             </div>
           </TabsContent>
         </Tabs>

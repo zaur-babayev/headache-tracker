@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
-import { ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { HeadacheForm } from "./headache-form";
 
@@ -57,26 +56,28 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
   const totalCellsNeeded = rowsNeeded * 7;
   const emptyCellsAfter = Array(totalCellsNeeded - totalCells).fill(null);
 
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
   // Helper function to get severity color
   const getSeverityColor = (severity: number) => {
     switch (severity) {
-      case 1: return "bg-blue-500 dark:bg-blue-600";
-      case 2: return "bg-green-500 dark:bg-green-600";
-      case 3: return "bg-yellow-500 dark:bg-yellow-600";
-      case 4: return "bg-orange-500 dark:bg-orange-600";
-      case 5: return "bg-red-500 dark:bg-red-600";
-      default: return "bg-gray-300 dark:bg-gray-600";
+      case 1: return "bg-[#FFE4E4]"; // Very light red
+      case 2: return "bg-[#FFB5B5]"; // Light red
+      case 3: return "bg-[#FF8585]"; // Medium red
+      case 4: return "bg-[#FF5252]"; // Dark red
+      case 5: return "bg-[#FF0000]"; // Very dark red
+      default: return "bg-muted";
     }
   };
 
   // Helper function to get severity text
   const getSeverityText = (severity: number) => {
     switch (severity) {
-      case 1: return "Mild";
-      case 2: return "Mild-Moderate";
-      case 3: return "Moderate";
-      case 4: return "Moderate-Severe";
-      case 5: return "Severe";
+      case 1: return "Level 1";
+      case 2: return "Level 2";
+      case 3: return "Level 3";
+      case 4: return "Level 4";
+      case 5: return "Level 5";
       default: return "Unknown";
     }
   };
@@ -106,66 +107,44 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
     }
   };
 
+  const previousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => setCurrentMonth(subMonths(currentMonth, { months: 1 }))}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Previous month</span>
-          </Button>
-          <h2 className="text-xl font-bold">{format(currentMonth, 'MMMM yyyy')}</h2>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => setCurrentMonth(addMonths(currentMonth, { months: 1 }))}
-          >
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Next month</span>
-          </Button>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <div className="hidden sm:flex items-center space-x-2">
-            <Badge className="bg-blue-500 dark:bg-blue-600">Mild</Badge>
-            <Badge className="bg-green-500 dark:bg-green-600">Mild-Moderate</Badge>
-            <Badge className="bg-yellow-500 dark:bg-yellow-600">Moderate</Badge>
-            <Badge className="bg-orange-500 dark:bg-orange-600">Moderate-Severe</Badge>
-            <Badge className="bg-red-500 dark:bg-red-600">Severe</Badge>
-          </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="sm:hidden">
-                  <Info className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="flex flex-col gap-1">
-                <Badge className="bg-blue-500 dark:bg-blue-600">Mild</Badge>
-                <Badge className="bg-green-500 dark:bg-green-600">Mild-Moderate</Badge>
-                <Badge className="bg-yellow-500 dark:bg-yellow-600">Moderate</Badge>
-                <Badge className="bg-orange-500 dark:bg-orange-600">Moderate-Severe</Badge>
-                <Badge className="bg-red-500 dark:bg-red-600">Severe</Badge>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
-
       <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-7 gap-1 mb-2 text-center">
-            <div className="font-medium text-xs sm:text-sm">Mon</div>
-            <div className="font-medium text-xs sm:text-sm">Tue</div>
-            <div className="font-medium text-xs sm:text-sm">Wed</div>
-            <div className="font-medium text-xs sm:text-sm">Thu</div>
-            <div className="font-medium text-xs sm:text-sm">Fri</div>
-            <div className="font-medium text-xs sm:text-sm">Sat</div>
-            <div className="font-medium text-xs sm:text-sm">Sun</div>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={previousMonth}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="font-medium">
+              {format(currentMonth, 'MMMM yyyy')}
+            </div>
+            
+            <Button
+              variant="ghost"
+              onClick={nextMonth}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {weekDays.map((day) => (
+              <div
+                key={day}
+                className="text-center text-sm text-muted-foreground font-medium"
+              >
+                {day}
+              </div>
+            ))}
           </div>
           
           <div className="grid grid-cols-7 gap-1">
@@ -183,21 +162,22 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
                   className={cn(
                     "aspect-square p-1 relative rounded-md transition-colors",
                     isCurrentMonth 
-                      ? "bg-background hover:bg-accent/50 cursor-pointer" 
-                      : "bg-muted text-muted-foreground"
+                      ? "hover:bg-accent cursor-pointer" 
+                      : "text-muted-foreground"
                   )}
                   onClick={() => isCurrentMonth && handleDayClick(day)}
                 >
-                  <div className="absolute top-1 right-1 text-xs sm:text-sm font-medium">
+                  <div className="absolute top-1 right-1 text-xs font-medium">
                     {format(day, 'd')}
                   </div>
                   
                   {entry && (
                     <div 
                       className={cn(
-                        "absolute bottom-1 left-1 right-1 h-2 rounded-full",
+                        "absolute bottom-1 left-1 right-1 h-1.5 rounded-full",
                         getSeverityColor(entry.severity)
                       )}
+                      title={`Level ${entry.severity}`}
                     ></div>
                   )}
                 </div>
@@ -211,66 +191,58 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
         </CardContent>
       </Card>
 
-      {selectedEntry && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        {selectedEntry && (
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle>Headache Entry - {format(new Date(selectedEntry.date), 'MMMM d, yyyy')}</DialogTitle>
-              <DialogDescription>
-                View and edit details for this headache entry.
-              </DialogDescription>
+              <DialogTitle className="text-xl font-semibold">
+                Headache Entry - {format(new Date(selectedEntry.date), 'MMM d, yyyy')}
+              </DialogTitle>
             </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="flex items-center space-x-2">
-                <Badge className={cn(getSeverityColor(selectedEntry.severity), "text-white")}>
-                  {getSeverityText(selectedEntry.severity)}
+
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "border-0",
+                    getSeverityColor(selectedEntry.severity)
+                  )}
+                >
+                  Level {selectedEntry.severity}
                 </Badge>
-                <span className="text-sm text-muted-foreground">
-                  Severity Level: {selectedEntry.severity}/5
-                </span>
               </div>
-              
-              {selectedEntry.triggers && (
-                <div>
-                  <h4 className="text-sm font-medium mb-1">Triggers:</h4>
-                  <p className="text-sm text-muted-foreground">{selectedEntry.triggers}</p>
-                </div>
-              )}
               
               {selectedEntry.notes && (
                 <div>
-                  <h4 className="text-sm font-medium mb-1">Notes:</h4>
-                  <p className="text-sm text-muted-foreground">{selectedEntry.notes}</p>
+                  <div className="text-sm font-medium mb-1">Notes</div>
+                  <div className="text-sm text-muted-foreground">{selectedEntry.notes}</div>
+                </div>
+              )}
+              
+              {selectedEntry.triggers && (
+                <div>
+                  <div className="text-sm font-medium mb-1">Triggers</div>
+                  <div className="text-sm text-muted-foreground">{selectedEntry.triggers}</div>
                 </div>
               )}
               
               {selectedEntry.medications.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium mb-1">Medications:</h4>
-                  <ul className="text-sm text-muted-foreground">
-                    {selectedEntry.medications.map((med) => (
-                      <li key={med.id}>
-                        {med.name} {med.dosage && `(${med.dosage})`}
-                      </li>
+                  <div className="text-sm font-medium mb-1">Medications</div>
+                  <div className="space-y-1">
+                    {selectedEntry.medications.map(med => (
+                      <div key={med.id} className="text-sm text-muted-foreground">
+                        {med.name} {med.dosage && `- ${med.dosage}`}
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
-              
-              <div className="pt-2">
-                <HeadacheForm 
-                  existingEntry={selectedEntry} 
-                  onSuccess={handleEntryUpdated}
-                  onCancel={() => setIsDialogOpen(false)}
-                  isDialog={false}
-                  mode="edit"
-                />
-              </div>
             </div>
           </DialogContent>
-        </Dialog>
-      )}
+        )}
+      </Dialog>
     </div>
   );
 }

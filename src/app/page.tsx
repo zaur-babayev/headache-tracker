@@ -244,21 +244,24 @@ export default function Home() {
                 <TabsList className="grid grid-cols-3 bg-transparent rounded-none mt-32">
                   <TabsTrigger 
                     value="this-month" 
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none cursor-pointer relative"
                   >
                     This month
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-primary opacity-0 data-[state=active]:opacity-100" />
                   </TabsTrigger>
                   <TabsTrigger 
                     value="this-year" 
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none cursor-pointer relative"
                   >
                     This year
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-primary opacity-0 data-[state=active]:opacity-100" />
                   </TabsTrigger>
                   <TabsTrigger 
                     value="all-entries" 
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none cursor-pointer relative"
                   >
                     All Entries
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-primary opacity-0 data-[state=active]:opacity-100" />
                   </TabsTrigger>
                 </TabsList>
                 

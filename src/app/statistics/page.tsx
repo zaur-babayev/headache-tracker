@@ -66,9 +66,21 @@ export default function StatisticsPage() {
       >
         <div className="space-y-6 mt-12">
           <Tabs defaultValue="charts" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="charts" className="text-sm">Analytics</TabsTrigger>
-              <TabsTrigger value="calendar" className="text-sm">Calendar</TabsTrigger>
+            <TabsList className="grid grid-cols-2 bg-transparent rounded-none">
+              <TabsTrigger 
+                value="charts" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none cursor-pointer relative"
+              >
+                Analytics
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-primary opacity-0 data-[state=active]:opacity-100" />
+              </TabsTrigger>
+              <TabsTrigger 
+                value="calendar" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none cursor-pointer relative"
+              >
+                Calendar
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-primary opacity-0 data-[state=active]:opacity-100" />
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="charts" className="space-y-6">

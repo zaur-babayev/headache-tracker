@@ -36,6 +36,12 @@ export default function Home() {
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
 
+  // Format medication name
+  const MEDICATION_NAMES: Record<string, string> = {
+    'ibuprofen': 'Ibuprofen',
+    'paracetamol': 'Paracetamol',
+  };
+
   const fetchHeadacheEntries = async () => {
     try {
       setIsLoading(true);
@@ -89,30 +95,17 @@ export default function Home() {
     return entryDate.getFullYear() === currentYear;
   });
 
-  // Calculate medication usage
-  const medicationCounts: Record<string, number> = {};
-  headacheEntries.forEach(entry => {
+  // Calculate top medication for this month only
+  const topMedicationThisMonth = thisMonthEntries.reduce((acc, entry) => {
     entry.medications.forEach(med => {
-      medicationCounts[med] = (medicationCounts[med] || 0) + 1;
+      acc[med] = (acc[med] || 0) + 1;
     });
-  });
+    return acc;
+  }, {});
 
-  // Find top medication
-  let topMedication = 'None';
-  let maxCount = 0;
-  Object.entries(medicationCounts).forEach(([med, count]) => {
-    if (count > maxCount) {
-      maxCount = count;
-      topMedication = med;
-    }
-  });
-
-  // Format medication name
-  const MEDICATION_NAMES: Record<string, string> = {
-    'ibuprofen': 'Ibuprofen',
-    'paracetamol': 'Paracetamol',
-  };
-  const formattedTopMed = MEDICATION_NAMES[topMedication] || topMedication;
+  const formattedTopMed = Object.entries(topMedicationThisMonth)
+    .sort(([,a], [,b]) => b - a)
+    .map(([med]) => MEDICATION_NAMES[med] || med)[0] || '-';
 
   // Calculate average severity
   const calculateAvgSeverity = (entries: HeadacheEntry[]) => {
@@ -231,9 +224,9 @@ export default function Home() {
                 <h1 className="text-5xl font-regular">
                   {thisMonthEntries.length}
                 </h1>
-                <p className="text-muted-foreground text-sm">headaches this month</p>
+                <p className="text-muted-foreground text-sm">headaches this month ({format(currentDate, 'MMMM')})</p>
                 
-                <div className="grid grid-cols-3 gap-4 mt-8">
+                <div className="grid grid-cols-3 gap-4 mt-6">
                   <div>
                     <p className="text-xl font-regular overflow-hidden text-ellipsis">{thisMonthEntries.reduce((acc, entry) => acc + entry.medications.length, 0)}</p>
                     <p className="text-muted-foreground text-xs">meds. taken</p>

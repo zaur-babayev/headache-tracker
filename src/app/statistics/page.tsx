@@ -44,8 +44,8 @@ export default function StatisticsPage() {
       
       const data = await response.json();
       setHeadacheEntries(data);
-    } catch (error) {
-      console.error('Error fetching headache entries:', error);
+    } catch (err) {
+      console.error('Error fetching headache entries:', err);
       setError('Failed to load headache entries. Please try again later.');
       toast.error('Failed to load headache entries');
     } finally {
@@ -58,16 +58,11 @@ export default function StatisticsPage() {
   }, []);
 
   return (
-    <PageContainer>
-      <div className="space-y-8">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Statistics
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Analyze your headache patterns
-          </p>
-        </div>
+    <PageContainer 
+      title="Statistics" 
+      description="Analyze your headache patterns"
+    >
+      <div className="space-y-6">
         <Tabs defaultValue="charts" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="charts" className="text-sm">Analytics</TabsTrigger>

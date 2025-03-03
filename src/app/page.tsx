@@ -39,13 +39,11 @@ export default function Home() {
       console.log('API Response status:', response.status);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error:', response.status, errorText);
-        throw new Error(`Failed to fetch headache entries: ${response.status} ${errorText}`);
+        throw new Error('Failed to fetch headache entries');
       }
       
       const data = await response.json();
-      console.log('Received data:', data.length, 'entries');
+      console.log('Fetched headache entries:', data.length);
       setHeadacheEntries(data);
     } catch (error) {
       console.error('Error fetching headache entries:', error);
@@ -56,61 +54,39 @@ export default function Home() {
     }
   };
 
-  const testAuth = async () => {
-    try {
-      console.log('Testing auth endpoint');
-      const response = await fetch('/api/test-auth', {
-        credentials: 'include',
-      });
-      
-      console.log('Test Auth Response status:', response.status);
-      const data = await response.json();
-      console.log('Test Auth Response data:', data);
-      
-      return data;
-    } catch (error) {
-      console.error('Error testing auth:', error);
-      return null;
-    }
-  };
-
   useEffect(() => {
-    if (isAuthLoaded && !isSignedIn) {
-      router.push('/sign-in');
-    } else if (isSignedIn) {
-      // Test auth first
-      testAuth().then(authData => {
-        console.log('Auth test complete:', authData);
-        // Then fetch headache entries
-        fetchHeadacheEntries();
-      });
+    if (!isAuthLoaded) {
+      return;
     }
+
+    if (!isSignedIn) {
+      console.log('User not signed in, redirecting to sign-in page');
+      router.push('/sign-in');
+      return;
+    }
+
+    console.log('User is signed in, fetching headache entries');
+    fetchHeadacheEntries();
   }, [isAuthLoaded, isSignedIn, router]);
 
-  // Show loading state while auth is loading
-  if (!isAuthLoaded || (isAuthLoaded && !isSignedIn)) {
+  if (!isAuthLoaded) {
     return (
-      <PageContainer>
-        <div className="flex items-center justify-center h-[50vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading...</span>
-        </div>
-      </PageContainer>
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
-  return (
-    <PageContainer>
-      <div className="space-y-8">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Headache Entries
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Track and manage your headaches
-          </p>
-        </div>
+  if (!isSignedIn) {
+    return null; // Will redirect in useEffect
+  }
 
+  return (
+    <PageContainer 
+      title="Headache Entries" 
+      description="Track and manage your headaches"
+    >
+      <div className="space-y-6">
         {isLoading ? (
           <div className="text-center py-8">
             <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>

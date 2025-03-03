@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
 import { HeadacheForm } from '@/components/headache-form';
 import { UserButton } from "@clerk/nextjs";
 
+// Export UserButton component for use in page titles
+export { UserButton };
+
 export function Nav() {
   const pathname = usePathname();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -56,20 +59,6 @@ export function Nav() {
               <HeadacheForm onSuccess={() => {}} isDialog={true} mode="create" />
               <UserButton afterSignOutUrl="/" />
             </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Top header for mobile */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
-        <div className="h-16 px-4">
-          <div className="flex h-full items-center justify-between">
-            <h1 className="text-lg font-semibold">
-              {pathname === '/' && 'Dashboard'}
-              {pathname === '/statistics' && 'Statistics'}
-              {pathname === '/calendar' && 'Calendar'}
-            </h1>
-            <UserButton afterSignOutUrl="/" />
           </div>
         </div>
       </header>

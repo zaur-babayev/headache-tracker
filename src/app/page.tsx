@@ -298,7 +298,6 @@ export default function Home() {
                                     {entry.medications.map(med => 
                                       med ? (MEDICATION_NAMES[med] || med) : ''
                                     ).filter(Boolean).join(', ')}
-                                    {entry.medications.some(med => med === 'ibuprofen') && ' (500)'}
                                   </p>
                                   <p className="text-muted-foreground text-xs">meds.</p>
                                 </div>

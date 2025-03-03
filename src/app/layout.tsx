@@ -26,6 +26,11 @@ export default function RootLayout({
     <ClerkProvider 
       appearance={{
         baseTheme: dark,
+        variables: {
+          colorBackground: '#09090b',
+          colorPrimary: '#0ea5e9',
+          colorInputBackground: '#18181b',
+        },
         elements: {
           card: 'bg-background',
           navbar: 'bg-background',
@@ -35,6 +40,7 @@ export default function RootLayout({
           userButtonPopoverActionButton: 'text-foreground hover:bg-accent',
           userButtonPopoverActionButtonIcon: 'text-foreground',
           userButtonPopoverFooter: 'bg-background',
+          formFieldInput: 'bg-[#18181b]',
         }
       }}
     >

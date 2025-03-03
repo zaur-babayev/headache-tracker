@@ -20,6 +20,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
+import { MEDICATION_NAMES } from '@/lib/constants';
+
 interface StatisticsDashboardProps {
   entries: HeadacheEntry[]
 }
@@ -41,11 +43,6 @@ interface Statistics {
   monthlyFrequency: { month: string; count: number; averageSeverity: number }[]
   medicationStats: { name: string; count: number }[]
 }
-
-const MEDICATION_NAMES: Record<string, string> = {
-  'ibuprofen': 'Ibuprofen',
-  'paracetamol': 'Paracetamol',
-};
 
 const calculateStatistics = (entries: HeadacheEntry[]): Statistics => {
   const totalHeadaches = entries.length
@@ -109,17 +106,17 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
   const severityChartConfig = {
     averageSeverity: {
       label: "Average Severity",
-      color: "#F87171", // bright red
+      color: "#6366F1", // bright blue
     },
   } as ChartConfig;
 
   const severityDistributionConfig = {
     colors: [
-      "#FFE4E4", // Level 1 - Very light red
-      "#FFB5B5", // Level 2 - Light red
-      "#FF8585", // Level 3 - Medium red
-      "#FF5252", // Level 4 - Dark red
-      "#FF0000", // Level 5 - Very dark red
+      "#FFFFFF", // Level 1 - White
+      "#BFE9FF", // Level 2 - Light blue (blue-200)
+      "#60A5FA", // Level 3 - Medium blue (blue-400)
+      "#2563EB", // Level 4 - Dark blue (blue-600)
+      "#1E40AF", // Level 5 - Very dark blue (blue-800)
     ],
   } as ChartConfig;
 
@@ -135,28 +132,56 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
   const mostCommonSeverity = mostCommonSeverityIndex !== -1 ? mostCommonSeverityIndex + 1 : 0;
   const percentChange = 0; // Calculate this if you have historical data
 
+  // Helper function to get severity color (blue shades)
+  const getSeverityColor = (severity: number) => {
+    switch (severity) {
+      case 1: return 'bg-white';
+      case 2: return 'bg-blue-200';
+      case 3: return 'bg-blue-400';
+      case 4: return 'bg-blue-600';
+      case 5: return 'bg-blue-800';
+      default: return 'bg-gray-300';
+    }
+  };
+
+  // Helper function to render severity circles
+  const renderSeverityCircles = (severity: number) => {
+    const circles = [];
+    for (let i = 1; i <= 5; i++) {
+      circles.push(
+        <div 
+          key={i} 
+          className={`w-5 h-5 rounded-full ${i <= severity ? getSeverityColor(i) : 'bg-gray-700'}`}
+        />
+      );
+    }
+    return (
+      <div className="flex space-x-2">
+        {circles}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-3">
-        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
-          <p className="text-xs font-medium text-muted-foreground">Total Headaches</p>
-          <p className="mt-1 text-xl font-semibold">{statistics.totalHeadaches}</p>
+            <div className="grid grid-cols-3 gap-3">
+        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-6 text-card-foreground shadow-sm">
+          <p className="text-xl font-regular">{statistics.totalHeadaches}</p>
+          <p className="text-xs text-muted-foreground">total headaches</p>
         </div>
         
-        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
-          <p className="text-xs font-medium text-muted-foreground">Common Severity</p>
-          <p className="mt-1 text-xl font-semibold">
-            {mostCommonSeverity || 'N/A'}
-          </p>
+        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-6 text-card-foreground shadow-sm">
+          <p className="text-xl font-regular">L{mostCommonSeverity || 'N/A'}</p>
+          <p className="text-xs text-muted-foreground">total average sev.</p>
         </div>
         
-        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
-          <p className="text-xs font-medium text-muted-foreground">Top Medication</p>
-          <p className="mt-1 text-xl font-semibold truncate max-w-[120px] text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-6 text-card-foreground shadow-sm">
+          <p className="text-xl font-regular truncate max-w-[120px] text-center">
             {statistics.medicationStats.length > 0 
               ? statistics.medicationStats[0].name 
               : 'None'}
           </p>
+          <p className="text-xs text-muted-foreground">total top meds.</p>
         </div>
       </div>
 
@@ -201,7 +226,7 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
                     cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                     content={<ChartTooltipContent hideLabel />}
                   />
-                  <Bar dataKey="count" fill="#60A5FA" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="count" fill="#8CBA80" radius={[4, 4, 0, 0]}>
                     <LabelList
                       dataKey="count"
                       position="top"
@@ -266,7 +291,7 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
                     cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                     content={<ChartTooltipContent hideLabel />}
                   />
-                  <Bar dataKey="averageSeverity" fill="#F87171" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="averageSeverity" fill="#C492B1" radius={[4, 4, 0, 0]}>
                     <LabelList
                       dataKey="averageSeverity"
                       position="top"

@@ -42,11 +42,11 @@ export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarPr
 
   const getSeverityColor = (severity: number) => {
     switch (severity) {
-      case 1: return "bg-[#FFE4E4]"; 
-      case 2: return "bg-[#FFB5B5]"; 
-      case 3: return "bg-[#FF8585]"; 
-      case 4: return "bg-[#FF5252]"; 
-      case 5: return "bg-[#FF0000]"; 
+      case 1: return "bg-white"; 
+      case 2: return "bg-blue-300"; 
+      case 3: return "bg-blue-400"; 
+      case 4: return "bg-blue-500"; 
+      case 5: return "bg-blue-600"; 
       default: return "bg-muted";
     }
   };

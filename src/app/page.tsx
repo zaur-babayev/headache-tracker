@@ -224,7 +224,7 @@ export default function Home() {
         ) : (
           <div className="space-y-8">
             {/* Stats Section */}
-            <div className="space-y-1 mt-16">
+            <div className="space-y-1 mt-16 px-4">
               <h1 className="text-5xl font-regular">
                 {thisMonthEntries.length}
               </h1>
@@ -232,15 +232,15 @@ export default function Home() {
               
               <div className="grid grid-cols-3 gap-4 mt-8">
                 <div>
-                  <p className="text-base font-regular">{thisMonthEntries.reduce((acc, entry) => acc + entry.medications.length, 0)}</p>
+                  <p className="text-xl font-regular overflow-hidden text-ellipsis">{thisMonthEntries.reduce((acc, entry) => acc + entry.medications.length, 0)}</p>
                   <p className="text-muted-foreground text-xs">meds. taken</p>
                 </div>
                 <div>
-                  <p className="text-base font-regular">L{avgSeverity}</p>
+                  <p className="text-xl font-regular overflow-hidden text-ellipsis">L{avgSeverity}</p>
                   <p className="text-muted-foreground text-xs">average sev.</p>
                 </div>
                 <div>
-                  <p className="text-base font-regular">{formattedTopMed}</p>
+                  <p className="text-xl font-regular overflow-hidden text-ellipsis">{formattedTopMed}</p>
                   <p className="text-muted-foreground text-xs">top meds.</p>
                 </div>
               </div>

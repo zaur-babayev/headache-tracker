@@ -326,20 +326,19 @@ export default function Home() {
               <div className="p-4">
                 <HeadacheForm
                   mode="edit"
+                  initialValues={selectedEntry}
                   existingEntry={selectedEntry}
-                  onSuccess={handleEditSuccess}
+                  onSuccess={() => {
+                    setSelectedEntry(null);
+                    fetchHeadacheEntries();
+                  }}
                   onCancel={() => setSelectedEntry(null)}
+                  onDelete={() => {
+                    handleDelete(selectedEntry.id);
+                    setSelectedEntry(null);
+                  }}
                   isDialog={false}
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute bottom-4 left-4"
-                  onClick={() => handleDelete(selectedEntry.id)}
-                >
-                  <Trash2 className="h-5 w-5" />
-                  <span className="sr-only">Delete entry</span>
-                </Button>
               </div>
             </div>
           </div>

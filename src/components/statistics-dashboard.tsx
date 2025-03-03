@@ -20,6 +20,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
+import { MEDICATION_NAMES } from '@/lib/constants';
+
 interface StatisticsDashboardProps {
   entries: HeadacheEntry[]
 }
@@ -41,11 +43,6 @@ interface Statistics {
   monthlyFrequency: { month: string; count: number; averageSeverity: number }[]
   medicationStats: { name: string; count: number }[]
 }
-
-const MEDICATION_NAMES: Record<string, string> = {
-  'ibuprofen': 'Ibuprofen',
-  'paracetamol': 'Paracetamol',
-};
 
 const calculateStatistics = (entries: HeadacheEntry[]): Statistics => {
   const totalHeadaches = entries.length

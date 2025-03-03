@@ -13,18 +13,7 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-
-const MEDICATIONS = [
-  { id: 'ibuprofen', name: 'Ibuprofen' },
-  { id: 'paracetamol', name: 'Paracetamol' },
-];
-
-const TRIGGERS = [
-  { id: 'lack-of-sleep', label: 'Lack of sleep' },
-  { id: 'too-much-sleep', label: 'Too much sleep' },
-  { id: 'stress', label: 'Stress' },
-  { id: 'hunger', label: 'Hunger' },
-];
+import { MEDICATIONS, TRIGGERS } from '@/lib/constants';
 
 type HeadacheFormProps = {
   onSuccess?: () => void;

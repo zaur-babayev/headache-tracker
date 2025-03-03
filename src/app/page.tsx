@@ -7,9 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@clerk/nextjs';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { Card, CardContent } from '@/components/ui/card';
+import { format, isToday, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { MEDICATION_NAMES, TRIGGER_NAMES } from '@/lib/constants';
+import { Card, CardContent } from '@/components/ui/card';
 import { HeadacheForm } from '@/components/headache-form';
 import { Nav } from '@/components/nav';
 
@@ -35,12 +38,6 @@ export default function Home() {
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
-
-  // Format medication name
-  const MEDICATION_NAMES: Record<string, string> = {
-    'ibuprofen': 'Ibuprofen',
-    'paracetamol': 'Paracetamol',
-  };
 
   const fetchHeadacheEntries = async () => {
     try {
@@ -306,7 +303,7 @@ export default function Home() {
                               {entry.triggers && entry.triggers.length > 0 && (
                                 <div className="space-y-1">
                                   <p className="text-sm font-normal">
-                                    {entry.triggers[0]}
+                                    {entry.triggers[0] ? (TRIGGER_NAMES[entry.triggers[0]] || entry.triggers[0]) : ''}
                                   </p>
                                   <p className="text-muted-foreground text-xs">trigger</p>
                                 </div>

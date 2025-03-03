@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { HeadacheForm } from '@/components/headache-form';
 
 type HeadacheEntry = {
   id: string;
@@ -23,12 +24,16 @@ type HeadacheEntry = {
 };
 
 export default function Home() {
-  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+  const { isLoaded: isAuthLoaded, isSignedIn, userId } = useAuth();
   const router = useRouter();
   const [headacheEntries, setHeadacheEntries] = useState<HeadacheEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('this-month');
+  const [selectedEntry, setSelectedEntry] = useState<HeadacheEntry | null>(null);
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
 
   const fetchHeadacheEntries = async () => {
     try {
@@ -73,10 +78,6 @@ export default function Home() {
   }, [isAuthLoaded, isSignedIn, router]);
 
   // Calculate statistics
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
-
   const thisMonthEntries = headacheEntries.filter(entry => {
     const entryDate = new Date(entry.date);
     return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
@@ -167,6 +168,15 @@ export default function Home() {
     );
   };
 
+  const handleCardClick = (entry: HeadacheEntry) => {
+    setSelectedEntry(entry);
+  };
+
+  const handleEditSuccess = () => {
+    setSelectedEntry(null);
+    fetchHeadacheEntries(); // Refresh the entries list
+  };
+
   if (!isAuthLoaded) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -254,7 +264,11 @@ export default function Home() {
                         entryDate.getFullYear() === currentDate.getFullYear();
                       
                       return (
-                        <Card key={entry.id} className="overflow-hidden bg-[#161616] border-[#161616] rounded-xl">
+                        <Card 
+                          key={entry.id} 
+                          className="overflow-hidden bg-[#161616] border-[#161616] rounded-xl cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+                          onClick={() => handleCardClick(entry)}
+                        >
                           <CardContent className="px-4 space-y-2">
                             <p className="text-muted-foreground text-xs">
                               {isYesterday ? 'Yesterday' : format(entryDate, 'MMMM d, yyyy')}
@@ -293,6 +307,22 @@ export default function Home() {
           </div>
         )}
       </div>
+      {/* Edit Entry Form */}
+      {selectedEntry && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg shadow-lg w-full max-w-md border">
+            <div className="p-4">
+              <HeadacheForm
+                mode="edit"
+                existingEntry={selectedEntry}
+                onSuccess={handleEditSuccess}
+                onCancel={() => setSelectedEntry(null)}
+                isDialog={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </PageContainer>
   );
 }

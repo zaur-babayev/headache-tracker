@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Nav } from '@/components/nav';
 import { ClerkProvider } from '@clerk/nextjs';
+import { dark } from '@clerk/themes';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -24,9 +25,23 @@ export default function RootLayout({
   return (
     <ClerkProvider 
       appearance={{
+        baseTheme: dark,
+        variables: {
+          colorPrimary: '#0ea5e9',
+          colorBackground: '#09090b',
+          colorText: '#ffffff',
+          colorInputBackground: '#18181b',
+          colorInputText: '#ffffff',
+        },
         elements: {
           formButtonPrimary: 'bg-primary hover:bg-primary/90',
           footerActionLink: 'text-primary hover:text-primary/90',
+          card: 'bg-background',
+          navbar: 'bg-background',
+          userButtonPopoverCard: 'bg-background text-foreground',
+          userButtonPopoverActionButton: 'text-foreground hover:bg-accent',
+          userButtonPopoverActionButtonIcon: 'text-foreground',
+          userButtonPopoverFooter: 'bg-background',
         }
       }}
     >

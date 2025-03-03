@@ -386,14 +386,7 @@ function HeadacheForm({
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'Add Headache Entry' : 'Edit Headache Entry'}
           </DialogTitle>
-          <DialogDescription>
-            {mode === 'create' 
-              ? 'Record a new headache episode' 
-              : 'Update your headache record'
-            }
-          </DialogDescription>
         </DialogHeader>
         <HeadacheFormContent
           onSuccess={() => {

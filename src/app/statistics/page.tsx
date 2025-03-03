@@ -64,7 +64,7 @@ export default function StatisticsPage() {
         title="Statistics" 
         description="Analyze your headache patterns"
       >
-        <div className="space-y-6">
+        <div className="space-y-6 mt-12">
           <Tabs defaultValue="charts" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="charts" className="text-sm">Analytics</TabsTrigger>

@@ -13,7 +13,11 @@ import { useAuth } from "@clerk/nextjs";
 // Export UserButton component for use in page titles
 export { UserButton };
 
-export function Nav() {
+interface NavProps {
+  onRefresh?: () => void;
+}
+
+export function Nav({ onRefresh }: NavProps) {
   const pathname = usePathname();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const { isSignedIn } = useAuth();
@@ -72,12 +76,17 @@ export function Nav() {
             </nav>
 
             <div className="flex items-center gap-4">
-              <HeadacheForm onSuccess={() => {}} isDialog={true} mode="create" />
+              <HeadacheForm onSuccess={onRefresh} isDialog={true} mode="create" />
               <UserButton afterSignOutUrl="/" />
             </div>
           </div>
         </div>
       </header>
+
+      {/* Mobile UserButton - top right */}
+      <div className="fixed top-0 right-0 z-50 p-4 md:hidden">
+        <UserButton afterSignOutUrl="/" />
+      </div>
 
       {/* Bottom navigation for mobile */}
       <nav className="fixed bottom-0 left-0 z-50 w-full h-16 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] md:hidden">
@@ -136,6 +145,7 @@ export function Nav() {
               <HeadacheForm 
                 onSuccess={() => {
                   setIsFormOpen(false);
+                  onRefresh?.();
                 }} 
                 onCancel={() => setIsFormOpen(false)}
                 isDialog={false}

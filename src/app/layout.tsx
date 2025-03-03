@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
-import { Nav } from '@/components/nav';
 import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 
@@ -54,7 +53,6 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <div className="relative min-h-screen flex flex-col">
-              <Nav />
               <main className="flex-1">
                 {children}
               </main>

@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HeadacheForm } from '@/components/headache-form';
+import { Nav } from '@/components/nav';
 
 type HeadacheEntry = {
   id: string;
@@ -210,148 +211,151 @@ export default function Home() {
   }
 
   return (
-    <PageContainer>
-      <div className="space-y-6">
-        {isLoading ? (
-          <div className="text-center py-8">
-            <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-            <p className="mt-2 text-sm text-muted-foreground">Loading headache entries...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-red-500 text-sm">{error}</p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Stats Section */}
-            <div className="space-y-1 mt-16 px-4">
-              <h1 className="text-5xl font-regular">
-                {thisMonthEntries.length}
-              </h1>
-              <p className="text-muted-foreground text-sm">headaches this month</p>
-              
-              <div className="grid grid-cols-3 gap-4 mt-8">
-                <div>
-                  <p className="text-xl font-regular overflow-hidden text-ellipsis">{thisMonthEntries.reduce((acc, entry) => acc + entry.medications.length, 0)}</p>
-                  <p className="text-muted-foreground text-xs">meds. taken</p>
-                </div>
-                <div>
-                  <p className="text-xl font-regular overflow-hidden text-ellipsis">L{avgSeverity}</p>
-                  <p className="text-muted-foreground text-xs">average sev.</p>
-                </div>
-                <div>
-                  <p className="text-xl font-regular overflow-hidden text-ellipsis">{formattedTopMed}</p>
-                  <p className="text-muted-foreground text-xs">top meds.</p>
+    <>
+      <Nav onRefresh={fetchHeadacheEntries} />
+      <PageContainer>
+        <div className="space-y-6">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+              <p className="mt-2 text-sm text-muted-foreground">Loading headache entries...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-500 text-sm">{error}</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Stats Section */}
+              <div className="space-y-1 mt-16 px-4">
+                <h1 className="text-5xl font-regular">
+                  {thisMonthEntries.length}
+                </h1>
+                <p className="text-muted-foreground text-sm">headaches this month</p>
+                
+                <div className="grid grid-cols-3 gap-4 mt-8">
+                  <div>
+                    <p className="text-xl font-regular overflow-hidden text-ellipsis">{thisMonthEntries.reduce((acc, entry) => acc + entry.medications.length, 0)}</p>
+                    <p className="text-muted-foreground text-xs">meds. taken</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-regular overflow-hidden text-ellipsis">L{avgSeverity}</p>
+                    <p className="text-muted-foreground text-xs">average sev.</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-regular overflow-hidden text-ellipsis">{formattedTopMed}</p>
+                    <p className="text-muted-foreground text-xs">top meds.</p>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Tabs for time periods */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 bg-transparent rounded-none mt-32">
-                <TabsTrigger 
-                  value="this-month" 
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
-                >
-                  This month
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="this-year" 
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
-                >
-                  This year
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="all-entries" 
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
-                >
-                  All Entries
-                </TabsTrigger>
-              </TabsList>
               
-              <TabsContent value={activeTab} className="mt-0 space-y-4">
-                {activeEntries.length === 0 ? (
-                  <div className="text-center py-8 border border-dashed rounded-lg">
-                    <p className="text-muted-foreground text-sm">No headache entries for this period.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    {activeEntries.map((entry) => {
-                      const entryDate = new Date(entry.date);
-                      const isYesterday = 
-                        entryDate.getDate() === currentDate.getDate() - 1 && 
-                        entryDate.getMonth() === currentDate.getMonth() && 
-                        entryDate.getFullYear() === currentDate.getFullYear();
-                      
-                      return (
-                        <Card 
-                          key={entry.id} 
-                          className="overflow-hidden bg-[#161616] border-[#161616] rounded-xl cursor-pointer hover:bg-[#1a1a1a] transition-colors"
-                          onClick={() => handleCardClick(entry)}
-                        >
-                          <CardContent className="px-4 space-y-2">
-                            <p className="text-muted-foreground text-xs">
-                              {isYesterday ? 'Yesterday' : format(entryDate, 'MMMM d, yyyy')}
-                            </p>
-                            
-                            {renderSeverityCircles(entry.severity)}
-                            
-                            {entry.medications && entry.medications.length > 0 && (
-                              <div className="space-y-1 mt-12">
-                                <p className="text-sm font-normal">
-                                  {entry.medications.map(med => 
-                                    med ? (MEDICATION_NAMES[med] || med) : ''
-                                  ).filter(Boolean).join(', ')}
-                                  {entry.medications.some(med => med === 'ibuprofen') && ' (500)'}
-                                </p>
-                                <p className="text-muted-foreground text-xs">meds.</p>
-                              </div>
-                            )}
-                            
-                            {entry.triggers && entry.triggers.length > 0 && (
-                              <div className="space-y-1">
-                                <p className="text-sm font-normal">
-                                  {entry.triggers[0]}
-                                </p>
-                                <p className="text-muted-foreground text-xs">trigger</p>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+              {/* Tabs for time periods */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid grid-cols-3 bg-transparent rounded-none mt-32">
+                  <TabsTrigger 
+                    value="this-month" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
+                  >
+                    This month
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="this-year" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
+                  >
+                    This year
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="all-entries" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
+                  >
+                    All Entries
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value={activeTab} className="mt-0 space-y-4">
+                  {activeEntries.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed rounded-lg">
+                      <p className="text-muted-foreground text-sm">No headache entries for this period.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      {activeEntries.map((entry) => {
+                        const entryDate = new Date(entry.date);
+                        const isYesterday = 
+                          entryDate.getDate() === currentDate.getDate() - 1 && 
+                          entryDate.getMonth() === currentDate.getMonth() && 
+                          entryDate.getFullYear() === currentDate.getFullYear();
+                        
+                        return (
+                          <Card 
+                            key={entry.id} 
+                            className="overflow-hidden bg-[#161616] border-[#161616] rounded-xl cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+                            onClick={() => handleCardClick(entry)}
+                          >
+                            <CardContent className="px-4 space-y-2">
+                              <p className="text-muted-foreground text-xs">
+                                {isYesterday ? 'Yesterday' : format(entryDate, 'MMMM d, yyyy')}
+                              </p>
+                              
+                              {renderSeverityCircles(entry.severity)}
+                              
+                              {entry.medications && entry.medications.length > 0 && (
+                                <div className="space-y-1 mt-12">
+                                  <p className="text-sm font-normal">
+                                    {entry.medications.map(med => 
+                                      med ? (MEDICATION_NAMES[med] || med) : ''
+                                    ).filter(Boolean).join(', ')}
+                                    {entry.medications.some(med => med === 'ibuprofen') && ' (500)'}
+                                  </p>
+                                  <p className="text-muted-foreground text-xs">meds.</p>
+                                </div>
+                              )}
+                              
+                              {entry.triggers && entry.triggers.length > 0 && (
+                                <div className="space-y-1">
+                                  <p className="text-sm font-normal">
+                                    {entry.triggers[0]}
+                                  </p>
+                                  <p className="text-muted-foreground text-xs">trigger</p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+        </div>
+        {/* Edit Entry Form */}
+        {selectedEntry && (
+          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-background rounded-lg shadow-lg w-full max-w-md border relative">
+              <div className="p-4">
+                <HeadacheForm
+                  mode="edit"
+                  existingEntry={selectedEntry}
+                  onSuccess={handleEditSuccess}
+                  onCancel={() => setSelectedEntry(null)}
+                  isDialog={false}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute bottom-4 left-4"
+                  onClick={() => handleDelete(selectedEntry.id)}
+                >
+                  <Trash2 className="h-5 w-5" />
+                  <span className="sr-only">Delete entry</span>
+                </Button>
+              </div>
+            </div>
           </div>
         )}
-      </div>
-      {/* Edit Entry Form */}
-      {selectedEntry && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg shadow-lg w-full max-w-md border relative">
-            <div className="p-4">
-              <HeadacheForm
-                mode="edit"
-                existingEntry={selectedEntry}
-                onSuccess={handleEditSuccess}
-                onCancel={() => setSelectedEntry(null)}
-                isDialog={false}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute bottom-4 left-4"
-                onClick={() => handleDelete(selectedEntry.id)}
-              >
-                <Trash2 className="h-5 w-5" />
-                <span className="sr-only">Delete entry</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </PageContainer>
+      </PageContainer>
+    </>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from 'next/navigation';
-import { UserButton } from './nav';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -10,9 +9,10 @@ interface PageContainerProps {
   children: React.ReactNode;
   title?: string;
   description?: string;
+  onRefresh?: () => void;
 }
 
-export function PageContainer({ children }: PageContainerProps) {
+export function PageContainer({ children, onRefresh }: PageContainerProps) {
   const pathname = usePathname();
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
@@ -41,11 +41,6 @@ export function PageContainer({ children }: PageContainerProps) {
   return (
     <div className="min-h-[calc(100vh-4rem)] md:min-h-[calc(100vh-4rem)] pb-20 md:pb-8">
       <div className="container px-4 py-6 md:max-w-2xl lg:max-w-2xl xl:max-w-2xl mx-auto">
-        {/* Mobile UserButton - top right */}
-        <div className="flex items-center justify-end mb-6 md:hidden">
-          <UserButton afterSignOutUrl="/" />
-        </div>
-        
         {children}
       </div>
     </div>

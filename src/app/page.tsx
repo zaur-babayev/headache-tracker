@@ -5,7 +5,7 @@ import { PageContainer } from '@/components/page-container';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@clerk/nextjs';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -177,6 +177,26 @@ export default function Home() {
     fetchHeadacheEntries(); // Refresh the entries list
   };
 
+  const handleDelete = async (entryId: string) => {
+    try {
+      const response = await fetch(`/api/headaches/${entryId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete entry');
+      }
+
+      toast.success('Entry deleted successfully');
+      setSelectedEntry(null);
+      fetchHeadacheEntries(); // Refresh the list
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+      toast.error('Failed to delete entry');
+    }
+  };
+
   if (!isAuthLoaded) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -310,7 +330,7 @@ export default function Home() {
       {/* Edit Entry Form */}
       {selectedEntry && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg shadow-lg w-full max-w-md border">
+          <div className="bg-background rounded-lg shadow-lg w-full max-w-md border relative">
             <div className="p-4">
               <HeadacheForm
                 mode="edit"
@@ -319,6 +339,15 @@ export default function Home() {
                 onCancel={() => setSelectedEntry(null)}
                 isDialog={false}
               />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute bottom-4 left-4"
+                onClick={() => handleDelete(selectedEntry.id)}
+              >
+                <Trash2 className="h-5 w-5" />
+                <span className="sr-only">Delete entry</span>
+              </Button>
             </div>
           </div>
         </div>

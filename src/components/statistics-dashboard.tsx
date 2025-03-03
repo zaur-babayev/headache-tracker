@@ -113,10 +113,10 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
   const severityDistributionConfig = {
     colors: [
       "#FFFFFF", // Level 1 - White
-      "#C7D2FE", // Level 2 - Light blue
-      "#A5B4FC", // Level 3 - Medium blue
-      "#818CF8", // Level 4 - Dark blue
-      "#6366F1", // Level 5 - Very dark blue
+      "#BFE9FF", // Level 2 - Light blue (blue-200)
+      "#60A5FA", // Level 3 - Medium blue (blue-400)
+      "#2563EB", // Level 4 - Dark blue (blue-600)
+      "#1E40AF", // Level 5 - Very dark blue (blue-800)
     ],
   } as ChartConfig;
 
@@ -136,10 +136,10 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
   const getSeverityColor = (severity: number) => {
     switch (severity) {
       case 1: return 'bg-white';
-      case 2: return 'bg-blue-300';
+      case 2: return 'bg-blue-200';
       case 3: return 'bg-blue-400';
-      case 4: return 'bg-blue-500';
-      case 5: return 'bg-blue-600';
+      case 4: return 'bg-blue-600';
+      case 5: return 'bg-blue-800';
       default: return 'bg-gray-300';
     }
   };
@@ -164,26 +164,24 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-3">
-        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
-          <p className="text-xs font-medium text-muted-foreground">Total Headaches</p>
-          <p className="mt-1 text-xl font-semibold">{statistics.totalHeadaches}</p>
+            <div className="grid grid-cols-3 gap-3">
+        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-6 text-card-foreground shadow-sm">
+          <p className="text-xl font-regular">{statistics.totalHeadaches}</p>
+          <p className="text-xs text-muted-foreground">total headaches</p>
         </div>
         
-        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
-          <p className="text-xs font-medium text-muted-foreground">Common Severity</p>
-          <p className="mt-1 text-xl font-semibold">
-            {mostCommonSeverity || 'N/A'}
-          </p>
+        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-6 text-card-foreground shadow-sm">
+          <p className="text-xl font-regular">L{mostCommonSeverity || 'N/A'}</p>
+          <p className="text-xs text-muted-foreground">total average sev.</p>
         </div>
         
-        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-3 text-card-foreground shadow-sm">
-          <p className="text-xs font-medium text-muted-foreground">Top Medication</p>
-          <p className="mt-1 text-xl font-semibold truncate max-w-[120px] text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg bg-card py-6 text-card-foreground shadow-sm">
+          <p className="text-xl font-regular truncate max-w-[120px] text-center">
             {statistics.medicationStats.length > 0 
               ? statistics.medicationStats[0].name 
               : 'None'}
           </p>
+          <p className="text-xs text-muted-foreground">total top meds.</p>
         </div>
       </div>
 
@@ -228,7 +226,7 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
                     cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                     content={<ChartTooltipContent hideLabel />}
                   />
-                  <Bar dataKey="count" fill="#60A5FA" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="count" fill="#8CBA80" radius={[4, 4, 0, 0]}>
                     <LabelList
                       dataKey="count"
                       position="top"
@@ -293,7 +291,7 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
                     cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                     content={<ChartTooltipContent hideLabel />}
                   />
-                  <Bar dataKey="averageSeverity" fill="#6366F1" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="averageSeverity" fill="#C492B1" radius={[4, 4, 0, 0]}>
                     <LabelList
                       dataKey="averageSeverity"
                       position="top"

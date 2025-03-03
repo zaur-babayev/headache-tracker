@@ -109,17 +109,17 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
   const severityChartConfig = {
     averageSeverity: {
       label: "Average Severity",
-      color: "#F87171", // bright red
+      color: "#6366F1", // bright blue
     },
   } as ChartConfig;
 
   const severityDistributionConfig = {
     colors: [
-      "#FFE4E4", // Level 1 - Very light red
-      "#FFB5B5", // Level 2 - Light red
-      "#FF8585", // Level 3 - Medium red
-      "#FF5252", // Level 4 - Dark red
-      "#FF0000", // Level 5 - Very dark red
+      "#FFFFFF", // Level 1 - White
+      "#C7D2FE", // Level 2 - Light blue
+      "#A5B4FC", // Level 3 - Medium blue
+      "#818CF8", // Level 4 - Dark blue
+      "#6366F1", // Level 5 - Very dark blue
     ],
   } as ChartConfig;
 
@@ -134,6 +134,36 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
   );
   const mostCommonSeverity = mostCommonSeverityIndex !== -1 ? mostCommonSeverityIndex + 1 : 0;
   const percentChange = 0; // Calculate this if you have historical data
+
+  // Helper function to get severity color (blue shades)
+  const getSeverityColor = (severity: number) => {
+    switch (severity) {
+      case 1: return 'bg-white';
+      case 2: return 'bg-blue-300';
+      case 3: return 'bg-blue-400';
+      case 4: return 'bg-blue-500';
+      case 5: return 'bg-blue-600';
+      default: return 'bg-gray-300';
+    }
+  };
+
+  // Helper function to render severity circles
+  const renderSeverityCircles = (severity: number) => {
+    const circles = [];
+    for (let i = 1; i <= 5; i++) {
+      circles.push(
+        <div 
+          key={i} 
+          className={`w-5 h-5 rounded-full ${i <= severity ? getSeverityColor(i) : 'bg-gray-700'}`}
+        />
+      );
+    }
+    return (
+      <div className="flex space-x-2">
+        {circles}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -266,7 +296,7 @@ export function StatisticsDashboard({ entries }: StatisticsDashboardProps) {
                     cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                     content={<ChartTooltipContent hideLabel />}
                   />
-                  <Bar dataKey="averageSeverity" fill="#F87171" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="averageSeverity" fill="#6366F1" radius={[4, 4, 0, 0]}>
                     <LabelList
                       dataKey="averageSeverity"
                       position="top"

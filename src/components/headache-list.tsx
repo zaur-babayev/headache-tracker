@@ -86,13 +86,30 @@ export function HeadacheList({ entries = [], onEntryUpdated = () => {} }: Headac
 
   const getSeverityColor = (severity: number) => {
     switch (severity) {
-      case 1: return 'bg-[#FFE4E4]';
-      case 2: return 'bg-[#FFB5B5]';
-      case 3: return 'bg-[#FF8585]';
-      case 4: return 'bg-[#FF5252]';
-      case 5: return 'bg-[#FF0000]';
-      default: return 'bg-gray-100';
+      case 1: return 'bg-white';
+      case 2: return 'bg-blue-300';
+      case 3: return 'bg-blue-400';
+      case 4: return 'bg-blue-500';
+      case 5: return 'bg-blue-600';
+      default: return 'bg-gray-300';
     }
+  };
+
+  const renderSeverityCircles = (severity: number) => {
+    const circles = [];
+    for (let i = 1; i <= 5; i++) {
+      circles.push(
+        <div 
+          key={i} 
+          className={`w-5 h-5 rounded-full ${i <= severity ? getSeverityColor(i) : 'bg-gray-700'}`}
+        />
+      );
+    }
+    return (
+      <div className="flex space-x-2">
+        {circles}
+      </div>
+    );
   };
 
   if (!entries || entries.length === 0) {
@@ -140,8 +157,7 @@ export function HeadacheList({ entries = [], onEntryUpdated = () => {} }: Headac
 
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${getSeverityColor(entry.severity)}`} />
-                  <span className="text-sm">Severity {entry.severity}/5</span>
+                  {renderSeverityCircles(entry.severity)}
                 </div>
 
                 {entry.triggers && entry.triggers.length > 0 && (

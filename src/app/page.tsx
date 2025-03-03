@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { HeadacheList } from '@/components/headache-list';
 import { PageContainer } from '@/components/page-container';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@clerk/nextjs';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 type HeadacheEntry = {
   id: string;
@@ -26,6 +28,7 @@ export default function Home() {
   const [headacheEntries, setHeadacheEntries] = useState<HeadacheEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('this-month');
 
   const fetchHeadacheEntries = async () => {
     try {
@@ -33,7 +36,7 @@ export default function Home() {
       setError(null);
       console.log('Fetching headache entries, isSignedIn:', isSignedIn);
       const response = await fetch('/api/headaches', {
-        credentials: 'include', // Include credentials (cookies) with the request
+        credentials: 'include',
       });
       
       console.log('API Response status:', response.status);
@@ -69,6 +72,101 @@ export default function Home() {
     fetchHeadacheEntries();
   }, [isAuthLoaded, isSignedIn, router]);
 
+  // Calculate statistics
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+
+  const thisMonthEntries = headacheEntries.filter(entry => {
+    const entryDate = new Date(entry.date);
+    return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
+  });
+
+  const thisYearEntries = headacheEntries.filter(entry => {
+    const entryDate = new Date(entry.date);
+    return entryDate.getFullYear() === currentYear;
+  });
+
+  // Calculate medication usage
+  const medicationCounts: Record<string, number> = {};
+  headacheEntries.forEach(entry => {
+    entry.medications.forEach(med => {
+      medicationCounts[med] = (medicationCounts[med] || 0) + 1;
+    });
+  });
+
+  // Find top medication
+  let topMedication = 'None';
+  let maxCount = 0;
+  Object.entries(medicationCounts).forEach(([med, count]) => {
+    if (count > maxCount) {
+      maxCount = count;
+      topMedication = med;
+    }
+  });
+
+  // Format medication name
+  const MEDICATION_NAMES: Record<string, string> = {
+    'ibuprofen': 'Ibuprofen',
+    'paracetamol': 'Paracetamol',
+  };
+  const formattedTopMed = MEDICATION_NAMES[topMedication] || topMedication;
+
+  // Calculate average severity
+  const calculateAvgSeverity = (entries: HeadacheEntry[]) => {
+    if (entries.length === 0) return 0;
+    const sum = entries.reduce((acc, entry) => acc + entry.severity, 0);
+    return Math.round((sum / entries.length) * 10) / 10; // Round to 1 decimal place
+  };
+
+  const avgSeverity = calculateAvgSeverity(thisMonthEntries);
+  
+  // Get entries based on active tab
+  const getActiveEntries = () => {
+    switch (activeTab) {
+      case 'this-month':
+        return thisMonthEntries;
+      case 'this-year':
+        return thisYearEntries;
+      case 'all-entries':
+        return headacheEntries;
+      default:
+        return thisMonthEntries;
+    }
+  };
+
+  const activeEntries = getActiveEntries();
+
+  // Helper function to get severity color (blue shades)
+  const getSeverityColor = (severity: number) => {
+    switch (severity) {
+      case 1: return 'bg-white';
+      case 2: return 'bg-blue-200';
+      case 3: return 'bg-blue-400';
+      case 4: return 'bg-blue-600';
+      case 5: return 'bg-blue-800';
+      default: return 'bg-gray-300';
+    }
+  };
+
+  // Helper function to render severity circles
+  const renderSeverityCircles = (severity: number) => {
+    const circles = [];
+    for (let i = 1; i <= 5; i++) {
+      circles.push(
+        <div 
+          key={i} 
+          className={`w-5 h-5 rounded-full ${i <= severity ? getSeverityColor(i) : ''}`}
+        />
+      );
+    }
+    return (
+      <div className="flex space-x-2">
+        {circles}
+      </div>
+    );
+  };
+
   if (!isAuthLoaded) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -82,10 +180,7 @@ export default function Home() {
   }
 
   return (
-    <PageContainer 
-      title="Headache Entries" 
-      description="Track and manage your headaches"
-    >
+    <PageContainer>
       <div className="space-y-6">
         {isLoading ? (
           <div className="text-center py-8">
@@ -96,29 +191,106 @@ export default function Home() {
           <div className="text-center py-8">
             <p className="text-red-500 text-sm">{error}</p>
           </div>
-        ) : headacheEntries.length === 0 ? (
-          <div className="text-center py-8 border border-dashed rounded-lg">
-            <p className="text-muted-foreground text-sm">No headache entries yet. Use the "Add Entry" button to record your first headache.</p>
-          </div>
         ) : (
-          <Tabs defaultValue="recent" className="w-full">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="recent">Recent Entries</TabsTrigger>
-              <TabsTrigger value="all">All Entries ({headacheEntries.length})</TabsTrigger>
-            </TabsList>
-            <TabsContent value="recent" className="mt-6">
-              <HeadacheList 
-                entries={headacheEntries.slice(0, 5)} 
-                onEntryUpdated={fetchHeadacheEntries} 
-              />
-            </TabsContent>
-            <TabsContent value="all" className="mt-6">
-              <HeadacheList 
-                entries={headacheEntries} 
-                onEntryUpdated={fetchHeadacheEntries} 
-              />
-            </TabsContent>
-          </Tabs>
+          <div className="space-y-8">
+            {/* Stats Section */}
+            <div className="space-y-1 mt-16">
+              <h1 className="text-5xl font-regular">
+                {thisMonthEntries.length}
+              </h1>
+              <p className="text-muted-foreground text-sm">headaches this month</p>
+              
+              <div className="grid grid-cols-3 gap-4 mt-8">
+                <div>
+                  <p className="text-base font-regular">{thisMonthEntries.reduce((acc, entry) => acc + entry.medications.length, 0)}</p>
+                  <p className="text-muted-foreground text-xs">meds. taken</p>
+                </div>
+                <div>
+                  <p className="text-base font-regular">L{avgSeverity}</p>
+                  <p className="text-muted-foreground text-xs">average sev.</p>
+                </div>
+                <div>
+                  <p className="text-base font-regular">{formattedTopMed}</p>
+                  <p className="text-muted-foreground text-xs">top meds.</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Tabs for time periods */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-3 bg-transparent rounded-none mt-32">
+                <TabsTrigger 
+                  value="this-month" 
+                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
+                >
+                  This month
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="this-year" 
+                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
+                >
+                  This year
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="all-entries" 
+                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
+                >
+                  All Entries
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value={activeTab} className="mt-0 space-y-4">
+                {activeEntries.length === 0 ? (
+                  <div className="text-center py-8 border border-dashed rounded-lg">
+                    <p className="text-muted-foreground text-sm">No headache entries for this period.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    {activeEntries.map((entry) => {
+                      const entryDate = new Date(entry.date);
+                      const isYesterday = 
+                        entryDate.getDate() === currentDate.getDate() - 1 && 
+                        entryDate.getMonth() === currentDate.getMonth() && 
+                        entryDate.getFullYear() === currentDate.getFullYear();
+                      
+                      return (
+                        <Card key={entry.id} className="overflow-hidden bg-[#161616] border-[#161616] rounded-xl">
+                          <CardContent className="px-4 space-y-2">
+                            <p className="text-muted-foreground text-xs">
+                              {isYesterday ? 'Yesterday' : format(entryDate, 'MMMM d, yyyy')}
+                            </p>
+                            
+                            {renderSeverityCircles(entry.severity)}
+                            
+                            {entry.medications && entry.medications.length > 0 && (
+                              <div className="space-y-1 mt-12">
+                                <p className="text-sm font-normal">
+                                  {entry.medications.map(med => 
+                                    med ? (MEDICATION_NAMES[med] || med) : ''
+                                  ).filter(Boolean).join(', ')}
+                                  {entry.medications.some(med => med === 'ibuprofen') && ' (500)'}
+                                </p>
+                                <p className="text-muted-foreground text-xs">meds.</p>
+                              </div>
+                            )}
+                            
+                            {entry.triggers && entry.triggers.length > 0 && (
+                              <div className="space-y-1">
+                                <p className="text-sm font-normal">
+                                  {entry.triggers[0]}
+                                </p>
+                                <p className="text-muted-foreground text-xs">trigger</p>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
         )}
       </div>
     </PageContainer>

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { HeadacheForm } from '@/components/headache-form';
 import { UserButton } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 
 // Export UserButton component for use in page titles
 export { UserButton };
@@ -15,6 +16,21 @@ export { UserButton };
 export function Nav() {
   const pathname = usePathname();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const { isSignedIn } = useAuth();
+
+  // Don't render navigation if user is not signed in
+  // and if the path is sign-in or sign-up
+  const isAuthPage = pathname === '/sign-in' || pathname === '/sign-up' || 
+                     pathname.startsWith('/sign-in/') || pathname.startsWith('/sign-up/');
+  
+  if (!isSignedIn && !isAuthPage) {
+    return null;
+  }
+
+  // Only render UserButton on auth pages
+  if (isAuthPage) {
+    return null;
+  }
 
   const routes = [
     {

@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 const MEDICATIONS = [
   { id: 'ibuprofen', name: 'Ibuprofen' },
@@ -265,9 +267,32 @@ export function HeadacheForm({
   mode = 'create',
   isDialog = true
 }: HeadacheFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
 
-  // For direct embedding (like in the mobile bottom nav or calendar view)
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isSignedIn && isOpen) {
+      router.push('/sign-in');
+      return;
+    }
+    setOpen(isOpen);
+  };
+
+  const handleSuccess = () => {
+    setOpen(false);
+    if (onSuccess) {
+      onSuccess();
+    }
+  };
+
+  const handleCancel = () => {
+    setOpen(false);
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
   if (!isDialog) {
     return (
       <HeadacheFormContent
@@ -275,34 +300,29 @@ export function HeadacheForm({
         onCancel={onCancel}
         initialValues={initialValues}
         existingEntry={existingEntry}
-        mode={existingEntry || (initialValues?.id) ? 'edit' : 'create'}
-        isDialog={false}
+        mode={mode}
+        isDialog={isDialog}
       />
     );
   }
 
-  // For dialog trigger button
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="default">Add Entry</Button>
+        <Button variant="outline">Add Entry</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? 'Add Headache Entry' : 'Edit Headache Entry'}
-          </DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Add New Headache Entry' : 'Edit Headache Entry'}</DialogTitle>
           <DialogDescription>
             {mode === 'create' 
-              ? 'Record a new headache episode. Click save when you\'re done.'
-              : 'Update this headache entry. Click save when you\'re done.'}
+              ? 'Record details about your headache episode.'
+              : 'Update the details of your headache entry.'}
           </DialogDescription>
         </DialogHeader>
-        <HeadacheFormContent 
-          onSuccess={() => {
-            setIsOpen(false);
-            if (onSuccess) onSuccess();
-          }} 
+        <HeadacheFormContent
+          onSuccess={handleSuccess}
+          onCancel={handleCancel}
           initialValues={initialValues}
           existingEntry={existingEntry}
           mode={mode}

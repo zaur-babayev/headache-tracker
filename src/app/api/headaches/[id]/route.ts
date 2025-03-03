@@ -1,33 +1,41 @@
 import { prisma } from '@/lib/db';
-import { getAuth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = getAuth();
+    console.log(`GET /api/headaches/${params.id}: Starting auth check`);
     
-    if (!userId) {
+    // Try to get the current user
+    const user = await currentUser();
+    console.log('Current user:', user ? `ID: ${user.id}` : 'No user found');
+    
+    // Also try the auth method
+    const { userId } = auth();
+    console.log('Auth userId:', userId);
+    
+    const effectiveUserId = user?.id || userId;
+    
+    // Always require authentication, even in development
+    if (!effectiveUserId) {
+      console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
     }
     
-    const id = context.params.id;
     const headacheEntry = await prisma.headacheEntry.findFirst({
-      where: { 
-        id,
-        userId 
+      where: {
+        id: params.id,
+        userId: effectiveUserId
       },
     });
-
+    
     if (!headacheEntry) {
-      return NextResponse.json(
-        { error: 'Headache entry not found' },
-        { status: 404 }
-      );
+      return new NextResponse('Entry not found', { status: 404 });
     }
-
+    
     // Parse the JSON strings back to arrays
     const parsedEntry = {
       ...headacheEntry,
@@ -38,46 +46,51 @@ export async function GET(
     return NextResponse.json(parsedEntry);
   } catch (error) {
     console.error('Error fetching headache entry:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch headache entry' },
-      { status: 500 }
-    );
+    return new NextResponse('Server Error', { status: 500 });
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = getAuth();
+    console.log(`PUT /api/headaches/${params.id}: Starting auth check`);
     
-    if (!userId) {
+    // Try to get the current user
+    const user = await currentUser();
+    console.log('Current user:', user ? `ID: ${user.id}` : 'No user found');
+    
+    // Also try the auth method
+    const { userId } = auth();
+    console.log('Auth userId:', userId);
+    
+    const effectiveUserId = user?.id || userId;
+    
+    // Always require authentication, even in development
+    if (!effectiveUserId) {
+      console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
     }
     
-    const id = context.params.id;
     const body = await request.json();
     const { date, severity, notes, triggers, medications } = body;
 
     // Check if the headache entry exists and belongs to the user
     const existingEntry = await prisma.headacheEntry.findFirst({
       where: { 
-        id,
-        userId 
+        id: params.id,
+        userId: effectiveUserId
       },
     });
 
     if (!existingEntry) {
-      return NextResponse.json(
-        { error: 'Headache entry not found' },
-        { status: 404 }
-      );
+      return new NextResponse('Entry not found', { status: 404 });
     }
 
     // Update the headache entry
     const updatedEntry = await prisma.headacheEntry.update({
-      where: { id },
+      where: { id: params.id },
       data: {
         date: date ? new Date(date) : undefined,
         severity: severity ? Number(severity) : undefined,
@@ -97,52 +110,53 @@ export async function PUT(
     return NextResponse.json(parsedEntry);
   } catch (error) {
     console.error('Error updating headache entry:', error);
-    return NextResponse.json(
-      { error: 'Failed to update headache entry' },
-      { status: 500 }
-    );
+    return new NextResponse('Server Error', { status: 500 });
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = getAuth();
+    console.log(`DELETE /api/headaches/${params.id}: Starting auth check`);
     
-    if (!userId) {
+    // Try to get the current user
+    const user = await currentUser();
+    console.log('Current user:', user ? `ID: ${user.id}` : 'No user found');
+    
+    // Also try the auth method
+    const { userId } = auth();
+    console.log('Auth userId:', userId);
+    
+    const effectiveUserId = user?.id || userId;
+    
+    // Always require authentication, even in development
+    if (!effectiveUserId) {
+      console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
     }
     
-    const id = context.params.id;
-
     // Check if the headache entry exists and belongs to the user
     const existingEntry = await prisma.headacheEntry.findFirst({
       where: { 
-        id,
-        userId 
+        id: params.id,
+        userId: effectiveUserId
       },
     });
 
     if (!existingEntry) {
-      return NextResponse.json(
-        { error: 'Headache entry not found' },
-        { status: 404 }
-      );
+      return new NextResponse('Entry not found', { status: 404 });
     }
 
     // Delete the headache entry
     await prisma.headacheEntry.delete({
-      where: { id },
+      where: { id: params.id },
     });
 
     return NextResponse.json({ message: 'Headache entry deleted successfully' });
   } catch (error) {
     console.error('Error deleting headache entry:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete headache entry' },
-      { status: 500 }
-    );
+    return new NextResponse('Server Error', { status: 500 });
   }
 }

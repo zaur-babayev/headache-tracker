@@ -12,12 +12,6 @@ type HeadacheEntry = {
 
 export async function GET() {
   try {
-    // In production, add extra logging
-    const isProduction = process.env.NODE_ENV === 'production';
-    if (isProduction) {
-      console.log('Running in production mode');
-    }
-    
     console.log('GET /api/headaches: Starting auth check');
     
     // Try to get the current user
@@ -28,31 +22,16 @@ export async function GET() {
     const { userId } = auth();
     console.log('Auth userId:', userId);
     
-    // For development, use a fixed user ID if no user is found
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const devUserId = 'dev_user_123'; // Development user ID
+    const effectiveUserId = user?.id || userId;
     
-    let effectiveUserId = user?.id || userId;
-    
-    // Only use development user ID in development mode
-    if (!effectiveUserId && isDevelopment) {
-      console.log('Using development user ID:', devUserId);
-      effectiveUserId = devUserId;
-    }
-    
-    // Safety check: ensure we're not using the development user ID in production
-    if (isProduction && effectiveUserId === devUserId) {
-      console.error('Security error: Attempted to use development user ID in production');
-      return new NextResponse('Server Error', { status: 500 });
-    }
-    
+    // Always require authentication, even in development
     if (!effectiveUserId) {
       console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
     }
-
-    console.log(`Fetching headache entries for user: ${effectiveUserId}`);
-
+    
+    console.log('Fetching headache entries for user:', effectiveUserId);
+    
     try {
       // Get all headache entries for the user
       const entries = await prisma.headacheEntry.findMany({
@@ -86,28 +65,19 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('POST /api/headaches: Starting auth check');
+    
+    // Try to get the current user
     const user = await currentUser();
-    const authUserId = auth().userId;
+    console.log('Current user:', user ? `ID: ${user.id}` : 'No user found');
     
-    // For development, use a fixed user ID if no user is found
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const devUserId = 'dev_user_123'; // Development user ID
+    // Also try the auth method
+    const { userId } = auth();
+    console.log('Auth userId:', userId);
     
-    let effectiveUserId = user?.id || authUserId;
+    const effectiveUserId = user?.id || userId;
     
-    // Only use development user ID in development mode
-    if (!effectiveUserId && isDevelopment) {
-      console.log('Using development user ID:', devUserId);
-      effectiveUserId = devUserId;
-    }
-    
-    // Safety check: ensure we're not using the development user ID in production
-    const isProduction = process.env.NODE_ENV === 'production';
-    if (isProduction && effectiveUserId === devUserId) {
-      console.error('Security error: Attempted to use development user ID in production');
-      return new NextResponse('Server Error', { status: 500 });
-    }
-    
+    // Always require authentication, even in development
     if (!effectiveUserId) {
       console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
@@ -148,28 +118,19 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    console.log('PUT /api/headaches: Starting auth check');
+    
+    // Try to get the current user
     const user = await currentUser();
-    const authUserId = auth().userId;
+    console.log('Current user:', user ? `ID: ${user.id}` : 'No user found');
     
-    // For development, use a fixed user ID if no user is found
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const devUserId = 'dev_user_123'; // Development user ID
+    // Also try the auth method
+    const { userId } = auth();
+    console.log('Auth userId:', userId);
     
-    let effectiveUserId = user?.id || authUserId;
+    const effectiveUserId = user?.id || userId;
     
-    // Only use development user ID in development mode
-    if (!effectiveUserId && isDevelopment) {
-      console.log('Using development user ID:', devUserId);
-      effectiveUserId = devUserId;
-    }
-    
-    // Safety check: ensure we're not using the development user ID in production
-    const isProduction = process.env.NODE_ENV === 'production';
-    if (isProduction && effectiveUserId === devUserId) {
-      console.error('Security error: Attempted to use development user ID in production');
-      return new NextResponse('Server Error', { status: 500 });
-    }
-    
+    // Always require authentication, even in development
     if (!effectiveUserId) {
       console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
@@ -193,8 +154,7 @@ export async function PUT(request: NextRequest) {
         return new NextResponse('Entry not found', { status: 404 });
       }
 
-      // In development mode, skip the user check
-      if (!isDevelopment && existingEntry.userId !== effectiveUserId) {
+      if (existingEntry.userId !== effectiveUserId) {
         console.log(`Unauthorized: User ${effectiveUserId} attempted to update entry ${data.id} belonging to ${existingEntry.userId}`);
         return new NextResponse('Unauthorized', { status: 401 });
       }
@@ -225,28 +185,19 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    console.log('DELETE /api/headaches: Starting auth check');
+    
+    // Try to get the current user
     const user = await currentUser();
-    const authUserId = auth().userId;
+    console.log('Current user:', user ? `ID: ${user.id}` : 'No user found');
     
-    // For development, use a fixed user ID if no user is found
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const devUserId = 'dev_user_123'; // Development user ID
+    // Also try the auth method
+    const { userId } = auth();
+    console.log('Auth userId:', userId);
     
-    let effectiveUserId = user?.id || authUserId;
+    const effectiveUserId = user?.id || userId;
     
-    // Only use development user ID in development mode
-    if (!effectiveUserId && isDevelopment) {
-      console.log('Using development user ID:', devUserId);
-      effectiveUserId = devUserId;
-    }
-    
-    // Safety check: ensure we're not using the development user ID in production
-    const isProduction = process.env.NODE_ENV === 'production';
-    if (isProduction && effectiveUserId === devUserId) {
-      console.error('Security error: Attempted to use development user ID in production');
-      return new NextResponse('Server Error', { status: 500 });
-    }
-    
+    // Always require authentication, even in development
     if (!effectiveUserId) {
       console.log('Unauthorized: No user ID found');
       return new NextResponse('Unauthorized', { status: 401 });
@@ -272,8 +223,7 @@ export async function DELETE(request: NextRequest) {
         return new NextResponse('Entry not found', { status: 404 });
       }
 
-      // In development mode, skip the user check
-      if (!isDevelopment && existingEntry.userId !== effectiveUserId) {
+      if (existingEntry.userId !== effectiveUserId) {
         console.log(`Unauthorized: User ${effectiveUserId} attempted to delete entry ${id} belonging to ${existingEntry.userId}`);
         return new NextResponse('Unauthorized', { status: 401 });
       }

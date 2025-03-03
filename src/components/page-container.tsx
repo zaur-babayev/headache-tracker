@@ -2,6 +2,9 @@
 
 import { usePathname } from 'next/navigation';
 import { UserButton } from './nav';
+import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 interface PageContainerProps {
   children: React.ReactNode;
@@ -11,6 +14,29 @@ interface PageContainerProps {
 
 export function PageContainer({ children, title, description }: PageContainerProps) {
   const pathname = usePathname();
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+  
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push('/sign-in');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  // Don't render content until auth is checked
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // Don't render content if not signed in
+  if (!isSignedIn) {
+    return null;
+  }
   
   // Determine title based on pathname if not provided
   const pageTitle = title || (

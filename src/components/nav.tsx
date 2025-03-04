@@ -76,7 +76,12 @@ export function Nav({ onRefresh }: NavProps) {
             </nav>
 
             <div className="flex items-center gap-4">
-              <HeadacheForm onSuccess={onRefresh} isDialog={true} mode="create" />
+              <Link href="/entry/new">
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  Add Entry
+                </Button>
+              </Link>
               <UserButton afterSignOutUrl="/" />
             </div>
           </div>
@@ -102,15 +107,15 @@ export function Nav({ onRefresh }: NavProps) {
             <span className="text-xs mt-1">Dashboard</span>
           </Link>
           
-          <button
-            onClick={() => setIsFormOpen(true)}
+          <Link
+            href="/entry/new"
             className="inline-flex flex-col items-center justify-center px-5 hover:bg-accent/50 transition-colors"
           >
             <div className="bg-primary text-primary-foreground rounded-full p-2 -mt-6 shadow-md">
               <Plus className="w-6 h-6" />
             </div>
             <span className="text-xs mt-1">Add Entry</span>
-          </button>
+          </Link>
           
           <Link 
             href="/statistics" 
@@ -124,37 +129,6 @@ export function Nav({ onRefresh }: NavProps) {
           </Link>
         </div>
       </nav>
-
-      {/* Mobile Add Entry Form Dialog */}
-      {isFormOpen && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 md:hidden">
-          <div className="bg-background rounded-lg shadow-lg w-full max-w-md border">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="font-semibold">Add Headache Entry</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setIsFormOpen(false)}
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </Button>
-            </div>
-            <div className="p-4">
-              <HeadacheForm 
-                onSuccess={() => {
-                  setIsFormOpen(false);
-                  onRefresh?.();
-                }} 
-                onCancel={() => setIsFormOpen(false)}
-                isDialog={false}
-                mode="create"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

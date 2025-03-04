@@ -3,11 +3,11 @@ import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { HeadacheForm } from '@/components/headache-form';
 import { toast } from 'sonner';
 import { Pencil, Trash2, Pill, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { MEDICATION_NAMES, TRIGGER_NAMES } from '@/lib/constants';
+import Link from 'next/link';
 
 type Medication = {
   id: string;
@@ -33,13 +33,11 @@ type HeadacheListProps = {
 
 export function HeadacheList({ entries = [], onEntryUpdated = () => {} }: HeadacheListProps) {
   const [selectedEntry, setSelectedEntry] = useState<HeadacheEntry | null>(null);
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEdit = (entry: HeadacheEntry) => {
-    setSelectedEntry(entry);
-    setIsEditFormOpen(true);
+    window.location.href = `/entry/edit/${entry.id}`;
   };
 
   const handleDelete = (entry: HeadacheEntry) => {
@@ -125,14 +123,17 @@ export function HeadacheList({ entries = [], onEntryUpdated = () => {} }: Headac
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={() => handleEdit(entry)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  <Link href={`/entry/edit/${entry.id}`}>
+                    <a>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </a>
+                  </Link>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -182,43 +183,22 @@ export function HeadacheList({ entries = [], onEntryUpdated = () => {} }: Headac
         </Card>
       ))}
 
-      {/* Edit Form Dialog */}
-      <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Headache Entry</DialogTitle>
-          </DialogHeader>
-          {selectedEntry && (
-            <HeadacheForm
-              mode="edit"
-              existingEntry={selectedEntry}
-              onSuccess={() => {
-                setIsEditFormOpen(false);
-                onEntryUpdated();
-              }}
-              onCancel={() => setIsEditFormOpen(false)}
-              isDialog={false}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Delete Headache Entry</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Are you sure you want to delete this headache entry? This action cannot be undone.
-            </p>
-          </div>
-          <div className="flex justify-end space-x-2">
+          <p>Are you sure you want to delete this headache entry? This action cannot be undone.</p>
+          <div className="flex justify-end space-x-2 mt-4">
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
           </div>

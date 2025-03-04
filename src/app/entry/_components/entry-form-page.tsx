@@ -46,9 +46,37 @@ export function EntryFormPage({ mode, entryId }: EntryFormPageProps) {
       <div className="space-y-6">
         <h1 className="text-base font-semibold">{title}</h1>
         {isLoading ? (
-          <div className="space-y-4 animate-pulse">
-            <div className="h-10 bg-gray-700 rounded"></div>
-            <div className="h-32 bg-gray-700 rounded"></div>
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="h-4 w-[100px] bg-card animate-pulse rounded" />
+                <div className="h-10 bg-card animate-pulse rounded" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-[120px] bg-card animate-pulse rounded" />
+                <div className="h-32 bg-card animate-pulse rounded" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-[140px] bg-card animate-pulse rounded" />
+                <div className="grid grid-cols-3 gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-10 bg-card animate-pulse rounded" />
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-[160px] bg-card animate-pulse rounded" />
+                <div className="grid grid-cols-3 gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-10 bg-card animate-pulse rounded" />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-10 w-24 bg-card animate-pulse rounded" />
+              <div className="h-10 w-24 bg-card animate-pulse rounded" />
+            </div>
           </div>
         ) : (
           <HeadacheForm 

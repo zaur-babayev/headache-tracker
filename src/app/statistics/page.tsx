@@ -84,21 +84,16 @@ export default function StatisticsPage() {
             </TabsList>
             
             <TabsContent value="charts" className="space-y-6">
-              {isLoading ? (
-                <div className="text-center py-10">
-                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                  <p className="mt-2 text-sm text-muted-foreground">Loading statistics data...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-10">
+              {error ? (
+                <div className="text-center py-8">
                   <p className="text-red-500 text-sm">{error}</p>
                 </div>
-              ) : headacheEntries.length === 0 ? (
-                <div className="text-center py-10 border border-dashed rounded-lg">
+              ) : headacheEntries.length === 0 && !isLoading ? (
+                <div className="text-center py-10">
                   <p className="text-muted-foreground text-sm">No headache entries yet. Use the "Add Entry" button to record your first headache.</p>
                 </div>
               ) : (
-                <StatisticsDashboard entries={headacheEntries} />
+                <StatisticsDashboard entries={headacheEntries || []} isLoading={isLoading} />
               )}
             </TabsContent>
             

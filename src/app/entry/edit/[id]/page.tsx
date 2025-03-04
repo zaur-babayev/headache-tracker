@@ -37,7 +37,7 @@ export default function EditEntryPage({ params }: { params: Promise<{ id: string
   return (
     <PageContainer>
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Edit Headache Entry</h1>
+        <h1 className="text-base font-semibold">Edit Headache Entry</h1>
         {isLoading ? (
           <div className="space-y-4 animate-pulse">
             <div className="h-10 bg-gray-700 rounded"></div>

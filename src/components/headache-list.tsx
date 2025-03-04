@@ -1,21 +1,13 @@
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { HeadacheForm } from '@/components/headache-form';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Pencil, Trash2, Pill, AlertCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { deleteHeadacheEntry } from '@/app/actions';
 import { MEDICATION_NAMES, TRIGGER_NAMES } from '@/lib/constants';
 
-type Medication = {
-  id: string;
-  name: string;
-  dosage?: string;
-};
-
-type HeadacheEntry = {
+interface HeadacheEntry {
   id: string;
   date: string;
   severity: number;
@@ -24,52 +16,38 @@ type HeadacheEntry = {
   medications: string[];
   createdAt: string;
   updatedAt: string;
-};
+}
 
-type HeadacheListProps = {
-  entries?: HeadacheEntry[];
+interface HeadacheListProps {
+  entries: HeadacheEntry[];
   onEntryUpdated?: () => void;
-};
+}
 
-export function HeadacheList({ entries = [], onEntryUpdated = () => {} }: HeadacheListProps) {
-  const [selectedEntry, setSelectedEntry] = useState<HeadacheEntry | null>(null);
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+export function HeadacheList({ entries, onEntryUpdated = () => {} }: HeadacheListProps) {
+  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
 
-  const handleEdit = (entry: HeadacheEntry) => {
-    setSelectedEntry(entry);
-    setIsEditFormOpen(true);
-  };
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this entry?')) {
+      return;
+    }
 
-  const handleDelete = (entry: HeadacheEntry) => {
-    setSelectedEntry(entry);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!selectedEntry) return;
-    
-    setIsDeleting(true);
-    
     try {
-      const response = await fetch(`/api/headaches?id=${selectedEntry.id}`, {
+      setIsDeleting(true);
+      setEntryToDelete(id);
+      await fetch(`/api/headaches?id=${id}`, {
         method: 'DELETE',
         credentials: 'include', // Include credentials (cookies) with the request
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete headache entry');
-      }
-      
-      toast.success('Headache entry deleted successfully');
+      toast.success('Entry deleted successfully');
       onEntryUpdated();
     } catch (error) {
-      console.error('Error deleting headache entry:', error);
-      toast.error('Failed to delete headache entry');
+      console.error('Error deleting entry:', error);
+      toast.error('Failed to delete entry');
     } finally {
       setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
+      setEntryToDelete(null);
     }
   };
 
@@ -101,129 +79,69 @@ export function HeadacheList({ entries = [], onEntryUpdated = () => {} }: Headac
     );
   };
 
-  if (!entries || entries.length === 0) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-muted-foreground">No headache entries yet.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       {entries.map((entry) => (
-        <Card key={entry.id} className="overflow-hidden bg-card">
-          <div className="flex items-start justify-between p-6">
-            <div className="space-y-4 flex-grow">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="font-medium leading-none">
-                    {entry.date ? format(new Date(entry.date), 'MMMM d, yyyy') : 'Unknown date'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {entry.date ? format(new Date(entry.date), 'EEEE') : ''}
+        <Card key={entry.id} className="relative">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-semibold">Date</h3>
+                <p>{format(parseISO(entry.date), 'MMM d, yyyy')}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold">Severity</h3>
+                <p>{renderSeverityCircles(entry.severity)}</p>
+              </div>
+              {entry.notes && (
+                <div className="col-span-2">
+                  <h3 className="font-semibold">Notes</h3>
+                  <p>{entry.notes}</p>
+                </div>
+              )}
+              {entry.triggers && entry.triggers.length > 0 && (
+                <div>
+                  <h3 className="font-semibold">Triggers</h3>
+                  <p>
+                    {entry.triggers
+                      .map((trigger) => TRIGGER_NAMES[trigger] || trigger)
+                      .join(', ')}
                   </p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={() => handleEdit(entry)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => handleDelete(entry)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+              )}
+              {entry.medications && entry.medications.length > 0 && (
+                <div>
+                  <h3 className="font-semibold">Medications</h3>
+                  <p>
+                    {entry.medications
+                      .map((medication) => MEDICATION_NAMES[medication] || medication)
+                      .join(', ')}
+                  </p>
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  {renderSeverityCircles(entry.severity)}
-                </div>
-
-                {entry.triggers && entry.triggers.length > 0 && (
-                  <div className="flex items-start space-x-2">
-                    <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <span className="text-sm">
-                      {entry.triggers.map(trigger => 
-                        trigger ? (TRIGGER_NAMES[trigger] || trigger) : ''
-                      ).filter(Boolean).join(', ')}
-                    </span>
-                  </div>
-                )}
-
-                {entry.medications && entry.medications.length > 0 && (
-                  <div className="flex items-start space-x-2">
-                    <Pill className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <span className="text-sm">
-                      {entry.medications.map(med => 
-                        med ? (MEDICATION_NAMES[med] || med) : ''
-                      ).filter(Boolean).join(', ')}
-                    </span>
-                  </div>
-                )}
-
-                {entry.notes && (
-                  <div className="text-sm text-muted-foreground border-t pt-3 mt-3">
-                    {entry.notes}
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-          </div>
+            <div className="absolute top-4 right-4 flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push(`/entry/edit/${entry.id}`)}
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
+                Edit
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(entry.id)}
+                disabled={isDeleting && entryToDelete === entry.id}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                {isDeleting && entryToDelete === entry.id ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       ))}
-
-      {/* Edit Form Dialog */}
-      <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Headache Entry</DialogTitle>
-          </DialogHeader>
-          {selectedEntry && (
-            <HeadacheForm
-              mode="edit"
-              existingEntry={selectedEntry}
-              onSuccess={() => {
-                setIsEditFormOpen(false);
-                onEntryUpdated();
-              }}
-              onCancel={() => setIsEditFormOpen(false)}
-              isDialog={false}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Delete Headache Entry</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Are you sure you want to delete this headache entry? This action cannot be undone.
-            </p>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

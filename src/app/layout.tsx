@@ -52,7 +52,7 @@ export default function RootLayout({
             forcedTheme="dark"
             disableTransitionOnChange
           >
-            <div className="relative min-h-screen flex flex-col">
+            <div className="relative min-h-screen flex flex-col pb-24">
               <main className="flex-1">
                 {children}
               </main>

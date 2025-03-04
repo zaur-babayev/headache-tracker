@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { CalendarIcon, X, Trash2 } from 'lucide-react';
@@ -38,7 +37,6 @@ type HeadacheFormProps = {
     updatedAt: string;
   };
   mode?: 'create' | 'edit';
-  isDialog?: boolean;
 };
 
 function HeadacheFormContent({ 
@@ -47,8 +45,7 @@ function HeadacheFormContent({
   onDelete,
   initialValues,
   existingEntry,
-  mode = 'create',
-  isDialog = true
+  mode = 'create'
 }: HeadacheFormProps) {
   const entryData = existingEntry || initialValues;
   
@@ -285,7 +282,7 @@ function HeadacheFormContent({
               type="button"
               variant="outline"
               onClick={onCancel}
-              className="border-gray-800 bg-transparent text-muted-foreground hover:bg-gray-800/20 hover:text-foreground cursor-pointer"
+              className="cursor-pointer"
               disabled={isSubmitting}
             >
               Cancel
@@ -353,58 +350,17 @@ function HeadacheForm({
   onDelete,
   initialValues,
   existingEntry,
-  mode = 'create',
-  isDialog = true
+  mode = 'create'
 }: HeadacheFormProps) {
-  const [open, setOpen] = useState(false);
-
-  if (!isDialog) {
-    return (
-      <HeadacheFormContent
-        onSuccess={onSuccess}
-        onCancel={onCancel}
-        onDelete={onDelete}
-        initialValues={initialValues}
-        existingEntry={existingEntry}
-        mode={mode}
-        isDialog={isDialog}
-      />
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="secondary" 
-          className="cursor-pointer"
-          onClick={() => setOpen(true)}
-        >
-          {mode === 'create' ? 'Add Headache' : 'Edit Entry'}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-          </DialogTitle>
-        </DialogHeader>
-        <HeadacheFormContent
-          onSuccess={() => {
-            onSuccess?.();
-            setOpen(false);
-          }}
-          onCancel={() => {
-            onCancel?.();
-            setOpen(false);
-          }}
-          onDelete={onDelete}
-          initialValues={initialValues}
-          existingEntry={existingEntry}
-          mode={mode}
-          isDialog={isDialog}
-        />
-      </DialogContent>
-    </Dialog>
+    <HeadacheFormContent
+      onSuccess={onSuccess}
+      onCancel={onCancel}
+      onDelete={onDelete}
+      initialValues={initialValues}
+      existingEntry={existingEntry}
+      mode={mode}
+    />
   );
 }
 

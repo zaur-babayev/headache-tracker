@@ -71,6 +71,7 @@ export default function StatisticsPage() {
                 )}
               </div>
         </div>
+        <div className="p-24"></div>
       </PageContainer>
     </>
   );

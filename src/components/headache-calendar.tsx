@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { HeadacheForm } from "./headache-form";
+import { MEDICATION_NAMES } from "@/lib/constants";
 
 type Medication = {
   id: string;
@@ -24,206 +24,121 @@ type HeadacheEntry = {
   updatedAt: string;
 };
 
-type HeadacheCalendarProps = {
+interface HeadacheCalendarProps {
   entries: HeadacheEntry[];
-  onEntryUpdated?: () => void;
-};
+}
 
-export function HeadacheCalendar({ entries, onEntryUpdated }: HeadacheCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+export function HeadacheCalendar({ entries }: HeadacheCalendarProps) {
+  const router = useRouter();
   const [selectedEntry, setSelectedEntry] = useState<HeadacheEntry | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-  const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-  const monthDays = Array.from({ length: monthEnd.getDate() }, (_, i) => new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i + 1));
-
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-  const getSeverityColor = (severity: number) => {
-    switch (severity) {
-      case 1: return "bg-white"; 
-      case 2: return "bg-blue-300"; 
-      case 3: return "bg-blue-400"; 
-      case 4: return "bg-blue-500"; 
-      case 5: return "bg-blue-600"; 
-      default: return "bg-muted";
+  // Group entries by date
+  const entriesByDate = entries.reduce((acc, entry) => {
+    const date = entry.date;
+    if (!acc[date]) {
+      acc[date] = [];
     }
-  };
+    acc[date].push(entry);
+    return acc;
+  }, {} as Record<string, HeadacheEntry[]>);
 
-  const getSeverityText = (severity: number) => {
-    switch (severity) {
-      case 1: return "Level 1";
-      case 2: return "Level 2";
-      case 3: return "Level 3";
-      case 4: return "Level 4";
-      case 5: return "Level 5";
-      default: return "Unknown";
-    }
-  };
+  // Generate calendar days
+  const today = new Date();
+  const daysInMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    0
+  ).getDate();
+  const firstDayOfMonth = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1
+  ).getDay();
 
-  const findEntryForDate = (date: Date) => {
-    return entries.find(entry => {
-      const entryDate = new Date(entry.date);
-      return entryDate.toDateString() === date.toDateString();
-    });
-  };
+  const days = Array.from({ length: daysInMonth }, (_, i) => {
+    const date = new Date(today.getFullYear(), today.getMonth(), i + 1);
+    const dateStr = format(date, "yyyy-MM-dd");
+    return {
+      date,
+      dateStr,
+      entries: entriesByDate[dateStr] || [],
+    };
+  });
 
-  const handleDayClick = (day: Date) => {
-    const entry = findEntryForDate(day);
-    if (entry) {
-      setSelectedEntry(entry);
-      setIsDialogOpen(true);
-    }
-  };
+  // Add empty cells for days before the first day of the month
+  const emptyCells = Array(firstDayOfMonth).fill(null);
 
-  const handleEntryUpdated = () => {
-    setIsDialogOpen(false);
-    if (onEntryUpdated) {
-      onEntryUpdated();
-    }
+  const handleDayClick = (entry: HeadacheEntry) => {
+    router.push(`/entry/edit/${entry.id}`);
   };
-
-  const previousMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
-  const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <Button
-              variant="ghost"
-              onClick={previousMonth}
-              className="h-8 w-8 p-0"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </Button>
-            
-            <div className="font-medium">
-              {format(currentMonth, 'MMMM yyyy')}
-            </div>
-            
-            <Button
-              variant="ghost"
-              onClick={nextMonth}
-              className="h-8 w-8 p-0"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </Button>
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="grid grid-cols-7 gap-1">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+          <div
+            key={day}
+            className="p-2 text-center font-semibold text-gray-600"
+          >
+            {day}
           </div>
+        ))}
 
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {weekDays.map((day) => (
-              <div
-                key={day}
-                className="text-center text-sm text-muted-foreground font-medium"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
+        {emptyCells.map((_, i) => (
+          <div
+            key={`empty-${i}`}
+            className="aspect-square p-1 bg-gray-50 rounded-lg"
+          />
+        ))}
+
+        {days.map(({ date, entries }) => {
+          const isToday = format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
           
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: currentMonth.getDay() }, (_, i) => (
-              <div key={`empty-before-${i}`} className="aspect-square p-1"></div>
-            ))}
-            
-            {monthDays.map((day) => {
-              const entry = findEntryForDate(day);
-              const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
-              
-              return (
-                <div 
-                  key={day.toDateString()}
-                  className={cn(
-                    "aspect-square p-1 relative rounded-md transition-colors",
-                    isCurrentMonth 
-                      ? "hover:bg-accent cursor-pointer" 
-                      : "text-muted-foreground"
-                  )}
-                  onClick={() => isCurrentMonth && handleDayClick(day)}
-                >
-                  <div className="absolute top-1 right-1 text-xs font-medium">
-                    {day.getDate()}
-                  </div>
-                  
-                  {entry && (
-                    <div 
+          return (
+            <div
+              key={date.toString()}
+              className={cn(
+                "aspect-square p-1 rounded-lg transition-colors",
+                isToday && "bg-blue-50 border border-blue-200",
+                !isToday && "bg-gray-50"
+              )}
+            >
+              <div className="h-full flex flex-col">
+                <div className="text-right text-sm p-1">
+                  {format(date, "d")}
+                </div>
+                <div className="flex-1 flex flex-col gap-1 overflow-auto">
+                  {entries.map((entry) => (
+                    <Button
+                      key={entry.id}
+                      variant="ghost"
+                      size="sm"
                       className={cn(
-                        "absolute bottom-1 left-1 right-1 h-1.5 rounded-full",
-                        getSeverityColor(entry.severity)
+                        "p-1 text-xs rounded w-full text-left flex items-center gap-1",
+                        "hover:bg-gray-100"
                       )}
-                      title={`Level ${entry.severity}`}
-                    ></div>
-                  )}
+                      onClick={() => handleDayClick(entry)}
+                    >
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "px-1 py-px text-[10px] leading-none",
+                          entry.severity >= 7 && "border-red-500 bg-red-50 text-red-700",
+                          entry.severity >= 4 && entry.severity < 7 && "border-yellow-500 bg-yellow-50 text-yellow-700",
+                          entry.severity < 4 && "border-green-500 bg-green-50 text-green-700"
+                        )}
+                      >
+                        {entry.severity}
+                      </Badge>
+                      <span className="truncate flex-1">{entry.notes}</span>
+                    </Button>
+                  ))}
                 </div>
-              );
-            })}
-            
-            {Array.from({ length: 6 - (monthDays.length + currentMonth.getDay()) % 7 }, (_, i) => (
-              <div key={`empty-after-${i}`} className="aspect-square p-1"></div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        {selectedEntry && (
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">
-                Headache Entry - {format(new Date(selectedEntry.date), 'MMM d, yyyy')}
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "border-0",
-                    getSeverityColor(selectedEntry.severity)
-                  )}
-                >
-                  Level {selectedEntry.severity}
-                </Badge>
               </div>
-              
-              {selectedEntry.notes && (
-                <div>
-                  <div className="text-sm font-medium mb-1">Notes</div>
-                  <div className="text-sm text-muted-foreground">{selectedEntry.notes}</div>
-                </div>
-              )}
-              
-              {selectedEntry.triggers && (
-                <div>
-                  <div className="text-sm font-medium mb-1">Triggers</div>
-                  <div className="text-sm text-muted-foreground">{selectedEntry.triggers.join(', ')}</div>
-                </div>
-              )}
-              
-              {selectedEntry.medications.length > 0 && (
-                <div>
-                  <div className="text-sm font-medium mb-1">Medications</div>
-                  <div className="space-y-1">
-                    {selectedEntry.medications.map(med => (
-                      <div key={med} className="text-sm text-muted-foreground">
-                        {med}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          </DialogContent>
-        )}
-      </Dialog>
+          );
+        })}
+      </div>
     </div>
   );
 }

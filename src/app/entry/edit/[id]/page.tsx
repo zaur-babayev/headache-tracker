@@ -14,6 +14,7 @@ export default function EditEntryPage({ params }: { params: Promise<{ id: string
   const resolvedParams = use(params);
   const [entry, setEntry] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchEntry = async () => {
@@ -35,6 +36,31 @@ export default function EditEntryPage({ params }: { params: Promise<{ id: string
 
     fetchEntry();
   }, [resolvedParams.id, router]);
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this entry?')) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`/api/headaches/${resolvedParams.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete entry');
+      }
+
+      toast.success('Entry deleted successfully');
+      router.push('/');
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+      toast.error('Failed to delete entry');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <PageContainer>
@@ -117,6 +143,7 @@ export default function EditEntryPage({ params }: { params: Promise<{ id: string
               existingEntry={entry}
               onSuccess={() => router.push('/')}
               onCancel={() => router.push('/')}
+              onDelete={handleDelete}
             />
           </div>
         </div>

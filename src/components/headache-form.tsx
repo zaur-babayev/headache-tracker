@@ -285,7 +285,7 @@ function HeadacheFormContent({
               type="button"
               variant="outline"
               onClick={onCancel}
-              className="border-gray-800 bg-transparent text-muted-foreground hover:bg-gray-800/20 hover:text-foreground cursor-pointer"
+              className="cursor-pointer"
               disabled={isSubmitting}
             >
               Cancel

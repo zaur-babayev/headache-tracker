@@ -5,18 +5,23 @@ import { HeadacheForm } from '@/components/headache-form';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { PageContainer } from '@/components/page-container';
-import { use } from 'react';
 
-export default function EditEntryPage({ params }: { params: Promise<{ id: string }> }) {
+interface EntryFormPageProps {
+  mode: 'create' | 'edit';
+  entryId?: string;
+}
+
+export function EntryFormPage({ mode, entryId }: EntryFormPageProps) {
   const router = useRouter();
-  const resolvedParams = use(params);
   const [entry, setEntry] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(mode === 'edit');
 
   useEffect(() => {
     const fetchEntry = async () => {
+      if (mode !== 'edit' || !entryId) return;
+      
       try {
-        const response = await fetch(`/api/headaches/${resolvedParams.id}`);
+        const response = await fetch(`/api/headaches/${entryId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch entry');
         }
@@ -32,12 +37,14 @@ export default function EditEntryPage({ params }: { params: Promise<{ id: string
     };
 
     fetchEntry();
-  }, [resolvedParams.id, router]);
+  }, [entryId, mode, router]);
+
+  const title = mode === 'create' ? 'Add New Headache Entry' : 'Edit Headache Entry';
 
   return (
     <PageContainer>
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Edit Headache Entry</h1>
+        <h1 className="text-2xl font-semibold">{title}</h1>
         {isLoading ? (
           <div className="space-y-4 animate-pulse">
             <div className="h-10 bg-gray-700 rounded"></div>
@@ -45,10 +52,13 @@ export default function EditEntryPage({ params }: { params: Promise<{ id: string
           </div>
         ) : (
           <HeadacheForm 
-            mode="edit"
+            mode={mode}
             isDialog={false}
             existingEntry={entry}
-            onSuccess={() => router.push('/')}
+            onSuccess={() => {
+              toast.success(mode === 'create' ? 'Entry added successfully' : 'Entry updated successfully');
+              router.push('/');
+            }}
             onCancel={() => router.push('/')}
           />
         )}

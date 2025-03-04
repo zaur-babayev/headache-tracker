@@ -5,15 +5,13 @@ import { PageContainer } from '@/components/page-container';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@clerk/nextjs';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format, isToday, parseISO } from 'date-fns';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { MEDICATION_NAMES, TRIGGER_NAMES } from '@/lib/constants';
 import { Card, CardContent } from '@/components/ui/card';
-import { HeadacheForm } from '@/components/headache-form';
 import { Nav } from '@/components/nav';
 
 type HeadacheEntry = {
@@ -34,7 +32,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('this-month');
-  const [selectedEntry, setSelectedEntry] = useState<HeadacheEntry | null>(null);
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -160,32 +157,7 @@ export default function Home() {
   };
 
   const handleCardClick = (entry: HeadacheEntry) => {
-    setSelectedEntry(entry);
-  };
-
-  const handleEditSuccess = () => {
-    setSelectedEntry(null);
-    fetchHeadacheEntries(); // Refresh the entries list
-  };
-
-  const handleDelete = async (entryId: string) => {
-    try {
-      const response = await fetch(`/api/headaches/${entryId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete entry');
-      }
-
-      toast.success('Entry deleted successfully');
-      setSelectedEntry(null);
-      fetchHeadacheEntries(); // Refresh the list
-    } catch (error) {
-      console.error('Error deleting entry:', error);
-      toast.error('Failed to delete entry');
-    }
+    router.push(`/entry/edit/${entry.id}`);
   };
 
   if (!isAuthLoaded) {
@@ -322,30 +294,6 @@ export default function Home() {
             </div>
           )}
         </div>
-        {/* Edit Entry Form */}
-        {selectedEntry && (
-          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-background rounded-lg shadow-lg w-full max-w-md border relative">
-              <div className="p-4">
-                <HeadacheForm
-                  mode="edit"
-                  initialValues={selectedEntry}
-                  existingEntry={selectedEntry}
-                  onSuccess={() => {
-                    setSelectedEntry(null);
-                    fetchHeadacheEntries();
-                  }}
-                  onCancel={() => setSelectedEntry(null)}
-                  onDelete={() => {
-                    handleDelete(selectedEntry.id);
-                    setSelectedEntry(null);
-                  }}
-                  isDialog={false}
-                />
-              </div>
-            </div>
-          </div>
-        )}
       </PageContainer>
     </>
   );
